@@ -50,7 +50,11 @@ const palette: Palette = new Palette((query) => source(query));
 const source = createPaletteSource(session, palette);
 
 window.addEventListener("keydown", (event) => {
-  if (!(event.metaKey || event.ctrlKey) || event.key !== "k") return;
+  // Matched on the physical key: on a Cyrillic layout this one reports "л",
+  // and matching the character would leave the palette unreachable there.
+  if (event.code !== "KeyK" || !(event.metaKey || event.ctrlKey)) return;
+  if (event.repeat) return;
+
   event.preventDefault();
   if (palette.isOpen) palette.close();
   else palette.open();
