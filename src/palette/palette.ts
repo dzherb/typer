@@ -1,0 +1,213 @@
+import type { Excerpt } from "./match.ts";
+
+export interface PaletteItem {
+  id: string;
+  label: string;
+  /** Shown dimmed at the right — a file name, or what kind of thing this is. */
+  hint?: string;
+  /** A second line: the line of prose a full-text hit was found in. */
+  excerpt?: Excerpt;
+  run: () => unknown;
+}
+
+export type PaletteSource = (query: string) => PaletteItem[];
+
+export interface AskOptions {
+  prompt: string;
+  initial?: string;
+  submit: (value: string) => unknown;
+}
+
+/**
+ * The only navigation surface: switching notes, searching their text, and
+ * every command. One widget instead of a sidebar, a search field and a menu.
+ */
+export class Palette {
+  private readonly source: PaletteSource;
+  private readonly dialog: HTMLDialogElement;
+  private readonly input: HTMLInputElement;
+  private readonly list: HTMLUListElement;
+
+  private items: PaletteItem[] = [];
+  private active = 0;
+  private asking: AskOptions | null = null;
+
+  constructor(source: PaletteSource) {
+    this.source = source;
+
+    this.dialog = document.createElement("dialog");
+    this.dialog.className = "palette";
+
+    this.input = document.createElement("input");
+    this.input.className = "palette__input";
+    this.input.type = "text";
+    this.input.autocomplete = "off";
+    this.input.spellcheck = false;
+
+    this.list = document.createElement("ul");
+    this.list.className = "palette__list";
+
+    this.dialog.append(this.input, this.list);
+    document.body.append(this.dialog);
+
+    this.input.addEventListener("input", () => this.refresh());
+    this.dialog.addEventListener("keydown", (event) => this.onKeydown(event));
+    // Clicking the backdrop, which is the dialog element itself.
+    this.dialog.addEventListener("mousedown", (event) => {
+      if (event.target === this.dialog) this.close();
+    });
+    /*
+     * Deliberately no "close" handler. The event is delivered asynchronously,
+     * so a handler that resets state would land after a reopen that happened
+     * in the same turn — which is exactly what "Переименовать" does: it closes
+     * the palette and immediately reopens it to ask for a name. State is set up
+     * on the way in instead, by open() and ask().
+     */
+  }
+
+  get isOpen(): boolean {
+    return this.dialog.open;
+  }
+
+  open(query = ""): void {
+    if (this.dialog.open) return;
+    this.asking = null;
+    this.input.placeholder = "Заметка, текст или команда";
+    this.input.value = query;
+    this.dialog.showModal();
+    this.refresh();
+    this.input.select();
+  }
+
+  /** Borrow the same input to ask for a single value, e.g. a new name. */
+  ask(options: AskOptions): void {
+    if (this.dialog.open) this.dialog.close();
+    this.asking = options;
+    this.input.placeholder = options.prompt;
+    this.input.value = options.initial ?? "";
+    this.dialog.showModal();
+    this.items = [];
+    this.renderHint(options.prompt);
+    this.input.select();
+  }
+
+  close(): void {
+    if (this.dialog.open) this.dialog.close();
+  }
+
+  private renderHint(text: string): void {
+    const hint = document.createElement("li");
+    hint.className = "palette__hint";
+    hint.textContent = text;
+    this.list.replaceChildren(hint);
+  }
+
+  private refresh(): void {
+    if (this.asking) return;
+    this.items = this.source(this.input.value.trim());
+    this.active = 0;
+    this.render();
+  }
+
+  private render(): void {
+    if (this.items.length === 0) {
+      this.renderHint("Ничего не найдено");
+      return;
+    }
+
+    this.list.replaceChildren(
+      ...this.items.map((item, index) => {
+        const row = document.createElement("li");
+        row.className = "palette__item";
+        row.setAttribute("role", "option");
+        row.setAttribute("aria-selected", String(index === this.active));
+
+        const label = document.createElement("span");
+        label.className = "palette__label";
+        label.textContent = item.label;
+        row.append(label);
+
+        if (item.hint) {
+          const hint = document.createElement("span");
+          hint.className = "palette__meta";
+          hint.textContent = item.hint;
+          row.append(hint);
+        }
+
+        if (item.excerpt) row.append(renderExcerpt(item.excerpt));
+
+        row.addEventListener("mousemove", () => this.setActive(index));
+        row.addEventListener("click", () => this.choose(index));
+        return row;
+      }),
+    );
+
+    this.scrollActiveIntoView();
+  }
+
+  private setActive(index: number): void {
+    if (index === this.active) return;
+    this.active = index;
+    for (const [i, row] of [...this.list.children].entries()) {
+      row.setAttribute("aria-selected", String(i === this.active));
+    }
+  }
+
+  private move(delta: number): void {
+    if (this.items.length === 0) return;
+    const count = this.items.length;
+    this.setActive((this.active + delta + count) % count);
+    this.scrollActiveIntoView();
+  }
+
+  private scrollActiveIntoView(): void {
+    this.list.children[this.active]?.scrollIntoView({ block: "nearest" });
+  }
+
+  private choose(index: number): void {
+    const item = this.items[index];
+    if (!item) return;
+    this.close();
+    void item.run();
+  }
+
+  private onKeydown(event: KeyboardEvent): void {
+    switch (event.key) {
+      case "ArrowDown":
+        event.preventDefault();
+        this.move(1);
+        break;
+      case "ArrowUp":
+        event.preventDefault();
+        this.move(-1);
+        break;
+      case "Enter": {
+        event.preventDefault();
+        const asking = this.asking;
+        if (asking) {
+          const value = this.input.value.trim();
+          this.close();
+          if (value) void asking.submit(value);
+        } else {
+          this.choose(this.active);
+        }
+        break;
+      }
+      // Escape closes the dialog natively.
+    }
+  }
+}
+
+function renderExcerpt(excerpt: Excerpt): HTMLElement {
+  const line = document.createElement("span");
+  line.className = "palette__excerpt";
+
+  const before = excerpt.text.slice(0, excerpt.at);
+  const hit = excerpt.text.slice(excerpt.at, excerpt.at + excerpt.length);
+  const after = excerpt.text.slice(excerpt.at + excerpt.length);
+
+  const mark = document.createElement("mark");
+  mark.textContent = hit;
+  line.append(before, mark, after);
+  return line;
+}

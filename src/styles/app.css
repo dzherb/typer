@@ -134,3 +134,98 @@ body {
 .notice__action:hover {
   background: var(--selection);
 }
+
+/* Command palette: the only navigation. */
+
+.palette {
+  width: min(38rem, calc(100vw - 2rem));
+  max-height: min(28rem, calc(100vh - 8rem));
+  margin: 12vh auto auto;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  color: var(--ink);
+  background: var(--bg-raised);
+  border: 1px solid var(--rule);
+  border-radius: 0.75rem;
+  box-shadow: var(--shadow);
+}
+
+.palette::backdrop {
+  background: var(--overlay);
+}
+
+.palette__input {
+  flex: none;
+  font: inherit;
+  color: var(--ink);
+  background: none;
+  border: none;
+  border-bottom: 1px solid var(--rule);
+  padding: 0.875rem 1rem;
+}
+
+.palette__input:focus {
+  outline: none;
+}
+
+.palette__input::placeholder {
+  color: var(--ink-faint);
+}
+
+.palette__list {
+  flex: 1;
+  min-height: 0;
+  margin: 0;
+  padding: 0.375rem;
+  list-style: none;
+  overflow-y: auto;
+}
+
+.palette__item {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: baseline;
+  gap: 0 0.75rem;
+  padding: 0.4375rem 0.625rem;
+  border-radius: 0.375rem;
+  cursor: pointer;
+}
+
+.palette__item[aria-selected="true"] {
+  background: var(--selection);
+}
+
+.palette__label {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.palette__meta {
+  font-size: 0.8125rem;
+  color: var(--ink-faint);
+  white-space: nowrap;
+}
+
+.palette__excerpt {
+  grid-column: 1 / -1;
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  color: var(--ink-muted);
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.palette__excerpt mark {
+  color: var(--ink);
+  background: none;
+  font-weight: 700;
+}
+
+.palette__hint {
+  padding: 0.4375rem 0.625rem;
+  color: var(--ink-faint);
+}
