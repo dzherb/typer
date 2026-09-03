@@ -1,0 +1,62 @@
+/*
+ * Light is the primary palette: warm paper, near-black ink.
+ * Dark is defined twice — once for the system preference and once for the
+ * explicit override — so the palette command wins in both directions.
+ */
+
+:root {
+  --bg: #fbfaf7;
+  --bg-raised: #ffffff;
+  --ink: #1b1b19;
+  --ink-muted: #6f6e69;
+  --ink-faint: #a8a7a0;
+  --syntax: #b9b7ae;
+  --accent: #2f6fb8;
+  --danger: #b1483a;
+  --rule: #e6e4dd;
+  --selection: #d6e4f5;
+  --overlay: rgba(28, 27, 24, 0.18);
+  --shadow: 0 18px 48px -12px rgba(28, 27, 24, 0.22);
+
+  --measure: 34rem;
+  --text-size: 1.125rem;
+  --line-height: 1.7;
+
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #1a1b1d;
+    --bg-raised: #232427;
+    --ink: #dcdbd6;
+    --ink-muted: #8d8d88;
+    --ink-faint: #5f605f;
+    --syntax: #55565a;
+    --accent: #79a9e0;
+    --danger: #d98274;
+    --rule: #2e2f33;
+    --selection: #2c3f56;
+    --overlay: rgba(0, 0, 0, 0.45);
+    --shadow: 0 18px 48px -12px rgba(0, 0, 0, 0.6);
+
+    color-scheme: dark;
+  }
+}
+
+:root[data-theme="dark"] {
+  --bg: #1a1b1d;
+  --bg-raised: #232427;
+  --ink: #dcdbd6;
+  --ink-muted: #8d8d88;
+  --ink-faint: #5f605f;
+  --syntax: #55565a;
+  --accent: #79a9e0;
+  --danger: #d98274;
+  --rule: #2e2f33;
+  --selection: #2c3f56;
+  --overlay: rgba(0, 0, 0, 0.45);
+  --shadow: 0 18px 48px -12px rgba(0, 0, 0, 0.6);
+
+  color-scheme: dark;
+}

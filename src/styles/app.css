@@ -1,0 +1,75 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: "iA Writer Quattro", ui-sans-serif, system-ui, sans-serif;
+  font-size: var(--text-size);
+  line-height: var(--line-height);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+#app {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Empty state: one question, one button, nothing else. */
+
+.gate {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5rem;
+  padding: 2rem;
+  text-align: center;
+}
+
+.gate__title {
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 400;
+  color: var(--ink-muted);
+  max-width: 26rem;
+  text-wrap: balance;
+}
+
+.gate__button {
+  font: inherit;
+  color: var(--ink);
+  background: var(--bg-raised);
+  border: 1px solid var(--rule);
+  border-radius: 0.5rem;
+  padding: 0.5rem 1.25rem;
+  cursor: pointer;
+  transition: border-color 120ms ease, transform 120ms ease;
+}
+
+.gate__button:hover {
+  border-color: var(--ink-faint);
+}
+
+.gate__button:active {
+  transform: translateY(1px);
+}
+
+.gate__error {
+  margin: 0;
+  color: var(--danger);
+  font-size: 0.9375rem;
+  max-width: 26rem;
+}
