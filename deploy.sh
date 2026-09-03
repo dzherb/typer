@@ -2,7 +2,7 @@
 # Build and publish. One command, no CI.
 set -euo pipefail
 
-HOST="${TYPER_HOST:-dzherb}"          # ssh alias from ~/.ssh/config
+HOST="${TYPER_HOST:-dzherb.ru}"       # ssh alias from ~/.ssh/config
 ROOT="${TYPER_ROOT:-/var/www/typer}"
 
 cd "$(dirname "$0")"
