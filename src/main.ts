@@ -38,9 +38,3 @@ window.addEventListener("keydown", (event) => {
   if (palette.isOpen) palette.close();
   else palette.open();
 });
-
-// Scaffolding: the automation harness in use cannot deliver real key events,
-// so behaviour is exercised against these. Removed before release.
-if (import.meta.env.DEV) {
-  Object.assign(window as unknown as Record<string, unknown>, { __session: session, __palette: palette });
-}
