@@ -3,7 +3,7 @@
     "target": "es2023",
     "module": "esnext",
     "lib": ["ES2023", "DOM"],
-    "types": ["vite/client"],
+    "types": ["vite/client", "wicg-file-system-access"],
     "allowArbitraryExtensions": true,
     "skipLibCheck": true,
     "strict": true,
