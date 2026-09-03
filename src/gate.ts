@@ -1,4 +1,5 @@
 import {
+  forgetVault,
   hasAccess,
   pickVault,
   recallVault,
@@ -11,6 +12,9 @@ interface Choice {
   label: string;
   run: () => Promise<FileSystemDirectoryHandle>;
 }
+
+const PICK_PROMPT =
+  "Где держать заметки? Выберите папку — в ней будут лежать обычные .md файлы.";
 
 function render(parent: HTMLElement, prompt: string, choices: Choice[], error?: string) {
   const gate = document.createElement("div");
@@ -43,7 +47,24 @@ function render(parent: HTMLElement, prompt: string, choices: Choice[], error?: 
 }
 
 /**
- * Resolves once we hold a readable, writable folder.
+ * Whether the folder is still where it was. Permission outlives the directory
+ * itself: move it, rename it or delete it in Finder and the handle still says
+ * "granted" while every read fails.
+ *
+ * Only meaningful once permission is granted — without it this fails for the
+ * other reason.
+ */
+async function isReachable(handle: FileSystemDirectoryHandle): Promise<boolean> {
+  try {
+    await handle.values().next();
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Resolves once we hold a folder that is both permitted and actually there.
  *
  * A remembered folder still needs its permission confirmed, and Chromium only
  * allows that inside a user gesture — hence a button rather than a prompt on
@@ -61,29 +82,42 @@ export function requestVault(parent: HTMLElement): Promise<Vault> {
       return;
     }
 
-    const attempt = async (choices: Choice[], prompt: string, choice: Choice, error?: string) => {
-      try {
-        const handle = await choice.run();
-        if (!(await hasAccess(handle, true))) {
-          show(prompt, choices, "Без доступа к папке заметки негде хранить.");
-          return;
-        }
-        await rememberVault(handle);
-        resolve(new Vault(handle));
-      } catch (failure) {
-        // AbortError just means the picker was dismissed; say nothing.
-        const aborted = failure instanceof DOMException && failure.name === "AbortError";
-        show(prompt, choices, aborted ? error : "Не удалось открыть папку.");
+    /** Resolves the outer promise, or returns why it could not. */
+    const accept = async (handle: FileSystemDirectoryHandle): Promise<string | null> => {
+      if (!(await hasAccess(handle, true))) {
+        return "Без доступа к папке заметки негде хранить.";
       }
+      if (!(await isReachable(handle))) {
+        return `Папку «${handle.name}» не удалось прочитать. Возможно, её переместили или удалили.`;
+      }
+      await rememberVault(handle);
+      resolve(new Vault(handle));
+      return null;
     };
 
-    const show = (prompt: string, choices: Choice[], error?: string) => {
+    const screen = (prompt: string, choices: Choice[], error?: string): void => {
       const gate = render(parent, prompt, choices, error);
-      for (const choice of choices) {
-        gate
-          .querySelector<HTMLButtonElement>(`[data-choice="${CSS.escape(choice.label)}"]`)
-          ?.addEventListener("click", () => void attempt(choices, prompt, choice, error));
-      }
+
+      gate.addEventListener("click", (event) => {
+        const button = (event.target as HTMLElement).closest<HTMLButtonElement>(".gate__button");
+        const choice = choices.find((c) => c.label === button?.dataset.choice);
+        if (!button || !choice) return;
+
+        button.disabled = true;
+        void (async () => {
+          try {
+            const failure = await accept(await choice.run());
+            if (failure) screen(prompt, choices, failure);
+          } catch (thrown) {
+            // AbortError just means the picker was dismissed; leave the screen be.
+            if (thrown instanceof DOMException && thrown.name === "AbortError") {
+              button.disabled = false;
+            } else {
+              screen(prompt, choices, "Не удалось открыть папку.");
+            }
+          }
+        })();
+      });
     };
 
     const pick: Choice = { label: "Выбрать папку", run: pickVault };
@@ -92,17 +126,26 @@ export function requestVault(parent: HTMLElement): Promise<Vault> {
       const remembered = await recallVault().catch(() => undefined);
 
       if (!remembered) {
-        show("Где держать заметки? Выберите папку — в ней будут лежать обычные .md файлы.", [pick]);
+        screen(PICK_PROMPT, [pick]);
         return;
       }
 
-      // Already granted: straight in, no screen at all.
       if (await hasAccess(remembered, false)) {
-        resolve(new Vault(remembered));
+        // Already granted: straight in, no screen at all.
+        if (await isReachable(remembered)) {
+          resolve(new Vault(remembered));
+          return;
+        }
+        await forgetVault().catch(() => undefined);
+        screen(
+          PICK_PROMPT,
+          [pick],
+          `Папки «${remembered.name}» больше нет там, где она была. Выберите её заново.`,
+        );
         return;
       }
 
-      show(`Открыть заметки в папке «${remembered.name}»?`, [
+      screen(`Открыть заметки в папке «${remembered.name}»?`, [
         { label: "Открыть", run: async () => remembered },
         { label: "Выбрать другую папку", run: pickVault },
       ]);

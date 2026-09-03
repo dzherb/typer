@@ -70,6 +70,11 @@ function commands(session: Session, palette: Palette): PaletteItem[] {
     { id: "rename", label: "Переименовать заметку", run: () => renameCurrent(session, palette) },
     { id: "delete", label: "Удалить заметку", run: () => confirmDelete(session) },
     { id: "count", label: "Сколько слов", run: () => countWords(session) },
+    {
+      id: "spellcheck",
+      label: session.spellcheckEnabled() ? "Орфография: выключить" : "Орфография: включить",
+      run: () => session.setSpellcheckEnabled(!session.spellcheckEnabled()),
+    },
     { id: "theme-system", label: "Тема: системная", run: () => setTheme("system") },
     { id: "theme-light", label: "Тема: светлая", run: () => setTheme("light") },
     { id: "theme-dark", label: "Тема: тёмная", run: () => setTheme("dark") },

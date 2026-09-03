@@ -2,12 +2,14 @@ export type Theme = "system" | "light" | "dark";
 
 export interface Settings {
   theme: Theme;
+  /** Whether the browser underlines misspellings as you write. */
+  spellcheck: boolean;
   /** Name of the note to reopen on startup. */
   lastNote?: string;
 }
 
 const KEY = "typer.settings";
-const DEFAULTS: Settings = { theme: "system" };
+const DEFAULTS: Settings = { theme: "system", spellcheck: true };
 
 /* Storage can throw outright in a private window, so every access is guarded. */
 

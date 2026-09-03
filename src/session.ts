@@ -1,7 +1,7 @@
 import type { EditorView } from "@codemirror/view";
 
-import { createEditor, loadDocument } from "./editor/editor.ts";
-import { updateSettings } from "./settings.ts";
+import { createEditor, loadDocument, setSpellcheck } from "./editor/editor.ts";
+import { readSettings, updateSettings } from "./settings.ts";
 import { titleOf } from "./storage/naming.ts";
 import type { Note } from "./storage/vault.ts";
 import { Vault } from "./storage/vault.ts";
@@ -28,10 +28,15 @@ export class Session {
   private timer: ReturnType<typeof setTimeout> | undefined;
   private writes: Promise<unknown> = Promise.resolve();
   private conflicted = false;
+  private spellcheck: boolean;
 
   private constructor(vault: Vault, parent: HTMLElement) {
     this.vault = vault;
-    this.view = createEditor({ parent, onChange: this.handleChange });
+    this.spellcheck = readSettings().spellcheck;
+    this.view = createEditor(parent, {
+      spellcheck: this.spellcheck,
+      onChange: this.handleChange,
+    });
   }
 
   static async start(vault: Vault, parent: HTMLElement, lastNote?: string): Promise<Session> {
@@ -70,6 +75,16 @@ export class Session {
 
   focus(): void {
     this.view.focus();
+  }
+
+  spellcheckEnabled(): boolean {
+    return this.spellcheck;
+  }
+
+  setSpellcheckEnabled(enabled: boolean): void {
+    this.spellcheck = enabled;
+    setSpellcheck(this.view, enabled);
+    updateSettings({ spellcheck: enabled });
   }
 
   private touch(): void {
@@ -129,7 +144,11 @@ export class Session {
     this.conflicted = false;
     this.notes.set(note.name, note);
 
-    loadDocument(this.view, note.text, this.handleChange);
+    loadDocument(this.view, {
+      doc: note.text,
+      spellcheck: this.spellcheck,
+      onChange: this.handleChange,
+    });
     this.view.focus();
     updateSettings({ lastNote: note.name });
   }
