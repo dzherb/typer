@@ -73,3 +73,64 @@ body {
   font-size: 0.9375rem;
   max-width: 26rem;
 }
+
+/* Notices: the only chrome, and only when there is something to say. */
+
+.notices {
+  position: fixed;
+  inset: auto 0 1.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.notice {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  max-width: min(36rem, calc(100vw - 2rem));
+  padding: 0.5rem 0.75rem 0.5rem 1rem;
+  background: var(--bg-raised);
+  border: 1px solid var(--rule);
+  border-radius: 0.5rem;
+  box-shadow: var(--shadow);
+  font-size: 0.9375rem;
+  line-height: 1.45;
+  pointer-events: auto;
+  animation: notice-in 160ms ease-out;
+}
+
+@keyframes notice-in {
+  from {
+    opacity: 0;
+    transform: translateY(0.5rem);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .notice {
+    animation: none;
+  }
+}
+
+.notice__text {
+  color: var(--ink);
+}
+
+.notice__action {
+  flex: none;
+  font: inherit;
+  color: var(--accent);
+  background: none;
+  border: none;
+  border-radius: 0.25rem;
+  padding: 0.125rem 0.375rem;
+  cursor: pointer;
+}
+
+.notice__action:hover {
+  background: var(--selection);
+}
