@@ -1,4 +1,10 @@
-import { dateStamp, isProvisionalName, slugify, titleOf } from "./naming.ts";
+import {
+  dateStamp,
+  isProvisionalName,
+  isTitleComplete,
+  slugify,
+  titleOf,
+} from "./naming.ts";
 
 export interface Note {
   /** File name including the .md extension; unique within the folder. */
@@ -114,13 +120,15 @@ export class Vault {
   }
 
   /**
-   * Give a still-untitled note its lasting name, once its first heading
-   * appears. Notes that already carry a slug are never renamed again — a file
-   * moving under you while you write is worse than an out-of-date name.
-   * Returns the note's name, changed or not.
+   * Give a still-untitled note its lasting name, once its first heading is
+   * written and left behind. Notes that already carry a slug are never renamed
+   * again — a file moving under you while you write is worse than an
+   * out-of-date name. Returns the note's name, changed or not.
    */
   async settleName(name: string, text: string): Promise<string> {
     if (!isProvisionalName(name)) return name;
+    // Still on the title line: the heading is not finished being typed.
+    if (!isTitleComplete(text)) return name;
 
     const slug = slugify(titleOf(text, ""));
     if (!slug) return name;

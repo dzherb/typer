@@ -43,6 +43,19 @@ export function isProvisionalName(name: string): boolean {
   return PROVISIONAL.test(name);
 }
 
+/**
+ * Whether the writer has finished the title line and moved off it.
+ *
+ * The title is only taken as final once a line exists after it. Otherwise a
+ * pause mid-phrase — stopping for a moment to find the right word — is enough
+ * for the autosave to freeze half a heading into the file name for good.
+ */
+export function isTitleComplete(text: string): boolean {
+  const lines = text.split("\n");
+  const titleLine = lines.findIndex((line) => line.trim() !== "");
+  return titleLine !== -1 && titleLine < lines.length - 1;
+}
+
 const HEADING = /^#{1,6}\s+(.+?)\s*#*\s*$/;
 const MAX_TITLE = 120;
 
