@@ -57,11 +57,14 @@ bun run dev
 
 Один раз на сервере:
 
+Сертификат берётся первым: конфиг на него ссылается, и с непроверяемым
+конфигом `nginx -t` не пройдёт.
+
 ```bash
+sudo certbot certonly --nginx -d typer.dzherb.ru
 sudo mkdir -p /var/www/typer && sudo chown "$USER" /var/www/typer
 sudo cp deploy/typer.dzherb.ru.conf /etc/nginx/sites-available/typer.dzherb.ru
 sudo ln -s /etc/nginx/sites-available/typer.dzherb.ru /etc/nginx/sites-enabled/
-sudo certbot --nginx -d typer.dzherb.ru
 sudo nginx -t && sudo systemctl reload nginx
 ```
 
