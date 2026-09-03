@@ -4,6 +4,7 @@ import { defaultKeymap, history, historyKeymap } from "@codemirror/commands";
 import { LanguageSupport, syntaxHighlighting } from "@codemirror/language";
 import { markdownLanguage } from "@codemirror/lang-markdown";
 
+import { hangingIndent } from "./hanging-indent.ts";
 import { markdownHighlight } from "./highlight.ts";
 import { markdownKeymap } from "./markdown-keys.ts";
 import { editorTheme } from "./theme.ts";
@@ -36,6 +37,7 @@ function baseExtensions({ spellcheck, onChange }: EditorConfig): Extension[] {
     new LanguageSupport(markdownLanguage),
     syntaxHighlighting(markdownHighlight),
     editorTheme,
+    hangingIndent(),
     typewriter(),
     spellcheckSlot.of(spellcheckAttribute(spellcheck)),
     // Ours first: Enter and Tab must beat the defaults.
