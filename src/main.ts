@@ -8,6 +8,16 @@ import { Palette } from "./palette/palette.ts";
 import { Session } from "./session.ts";
 import { applyTheme, readSettings } from "./settings.ts";
 
+/*
+ * Registered first, and deliberately not behind the "load" event: the module
+ * suspends below on the folder gate, which can wait for a click indefinitely.
+ * Anything after that await would never run on a first visit — and offline
+ * access is the whole point of the worker.
+ */
+if (import.meta.env.PROD && "serviceWorker" in navigator) {
+  void navigator.serviceWorker.register("/sw.js");
+}
+
 const app = document.querySelector<HTMLDivElement>("#app")!;
 
 applyTheme(readSettings().theme);
