@@ -1,73 +1,83 @@
 # typer
 
-Минимальный редактор markdown для ежедневных заметок. Без сервера: заметки —
-обычные `.md` файлы в папке на диске, приложение целиком работает в браузере.
+A minimal markdown editor for daily notes. No server: the notes are ordinary
+`.md` files in a folder on disk, and the whole app runs in the browser.
 
-## Как устроено
+## How it works
 
-- **Редактор** — CodeMirror 6. Исходник markdown всегда виден, разметка
-  приглушена, но не прячется (модель iA Writer, не Typora).
-- **Хранилище** — File System Access API. Папка выбирается один раз, её handle
-  живёт в IndexedDB. Наружу не уходит ничего: сервер только отдаёт статику.
-- **Навигация** — `Cmd+K`. Переключение заметок, полнотекстовый поиск,
-  создание, переименование, удаление, счётчик слов, тема. Больше на экране
-  ничего нет.
-- **Офлайн** — service worker кэширует приложение целиком.
-- **Орфография** — встроенная проверка браузера, включена по умолчанию.
-  Выключается командой в палитре, выбор запоминается.
+- **Editor** — CodeMirror 6. The markdown source stays visible at all times,
+  muted but never hidden (the iA Writer model, not Typora).
+- **Storage** — the File System Access API. You pick the folder once and its
+  handle lives in IndexedDB. Nothing leaves the machine: the server only
+  serves static files.
+- **Navigation** — `Cmd+K`. Switching notes, full-text search, creating,
+  renaming, deleting, word count, theme, language. Nothing else is on screen.
+- **Offline** — a service worker precaches the entire app.
+- **Spelling** — the browser's own checker, on by default. A palette command
+  turns it off, and the choice is remembered.
 
-## Горячие клавиши
+## Shortcuts
 
 | | |
 |---|---|
-| `Cmd+K` | палитра: заметки, поиск, команды |
-| `Enter` | продолжает список или цитату; на пустом пункте выходит из списка |
-| `Tab` / `Shift+Tab` | вложенность пункта |
-| `Cmd+B` / `Cmd+I` | жирный / курсив |
+| `Cmd+K` | palette: notes, search, commands |
+| `Enter` | continues a list or a quote; on an empty item it leaves the list |
+| `Tab` / `Shift+Tab` | indent level of the item |
+| `Cmd+B` / `Cmd+I` | bold / italic |
 
-## Имена файлов
+## File names
 
-Новая заметка создаётся как `2026-09-04.md`. Имя один раз фиксируется —
-`2026-09-04-pro-otpusk.md`, с транслитерацией — но только когда строка
-заголовка дописана и за ней появилась следующая. Пауза посреди фразы, пока
-подбираешь слово, ничего не фиксирует: иначе автосейв успел бы навсегда
-записать в имя файла половину заголовка.
+A new note is created as `2026-09-04.md`. The name is settled once —
+`2026-09-04-on-holiday.md`, transliterated where it has to be — but only after
+the title line is finished and another line has appeared below it. A pause
+mid-phrase, while you look for the right word, settles nothing: otherwise the
+autosave would freeze half a heading into the file name for good.
 
-Если заголовок написан, но перевода строки за ним так и нет, имя остаётся
-датой — в палитре заметка всё равно видна под своим заголовком, а имя встанет,
-когда допишешь. Дальше файл не переименовывается сам никогда: имя, которое
-меняется под тобой, ломает внешние ссылки и путает git. Переименовать вручную
-можно из палитры.
+If the title is written but no line break follows it yet, the name stays a
+date — the note still shows under its own title in the palette, and the name
+lands when you finish the line. After that the file is never renamed on its
+own: a name that changes under you breaks outside links and confuses git.
+Renaming by hand is a palette command.
 
-## Сохранение
+## Saving
 
-Автоматически через 700 мс после того, как перестал печатать, при потере
-фокуса и при закрытии вкладки. Браузер не умеет следить за папкой, поэтому при
-возвращении во вкладку сверяется mtime: если правок в редакторе нет — заметка
-просто перечитывается, если есть — спрашивает, чья версия побеждает.
+Automatically 700 ms after you stop typing, on losing focus, and on closing
+the tab. The browser cannot watch a folder, so mtime is compared whenever the
+tab comes back: with no pending edits the note is simply re-read, and with
+edits you are asked whose version wins.
 
-Удаление безвозвратно: браузеру недоступна Корзина macOS.
+Deletion is permanent: the browser has no access to the system Trash.
 
-## Разработка
+## Language
+
+The interface comes in Russian and English. On a first visit the browser's own
+language decides; after that, `Cmd+K` → `Language: Русский` / `Language:
+English`, and the choice is remembered. Each language is named in itself, so
+either one is findable from the other.
+
+The choice also sets the page's `lang`, which is what the browser's spell
+checker reads — see below.
+
+## Development
 
 ```bash
 bun install
 bun run dev
 ```
 
-## Деплой
+## Deployment
 
 ```bash
 ./deploy.sh
 ```
 
-Собирает и заливает `dist/` по rsync на `dzherb:/var/www/typer`. Хост и путь
-переопределяются через `TYPER_HOST` и `TYPER_ROOT`.
+Builds and rsyncs `dist/` to `dzherb:/var/www/typer`. Host and path are
+overridden with `TYPER_HOST` and `TYPER_ROOT`.
 
-Один раз на сервере:
+Once, on the server:
 
-Сертификат берётся первым: конфиг на него ссылается, и с непроверяемым
-конфигом `nginx -t` не пройдёт.
+The certificate comes first: the config refers to it, and `nginx -t` will not
+pass on a config it cannot verify.
 
 ```bash
 sudo certbot certonly --nginx -d typer.dzherb.ru
@@ -77,23 +87,23 @@ sudo ln -s /etc/nginx/sites-available/typer.dzherb.ru /etc/nginx/sites-enabled/
 sudo nginx -t && sudo systemctl reload nginx
 ```
 
-Дальше открыть `https://typer.dzherb.ru`, выбрать папку и установить как
-приложение — в отдельном окне без браузерного хрома разрешение на папку
-запоминается надёжнее.
+Then open `https://typer.dzherb.ru`, pick a folder and install it as an app —
+in its own window, without browser chrome, the folder permission sticks far
+more reliably.
 
-## Браузер
+## Browsers
 
-Нужен Chromium: Chrome, Yandex Browser, Edge. Safari не поддерживает
-File System Access API, и без него заметкам негде лежать.
+Chromium is required: Chrome, Edge, Yandex Browser. Safari has no File System
+Access API, and without it the notes have nowhere to live.
 
-Проверка орфографии — браузерная, своих словарей приложение не носит. Какой
-язык проверяется, решают настройки браузера: страница объявлена как `lang="ru"`,
-поэтому английские слова в русской заметке будут подчёркиваться, пока в
-настройках языков не включён и английский словарь тоже. Автозамена
-(`autocorrect`) выключена намеренно — молча переписывать слова в дневнике не то
-же самое, что подчеркнуть их.
+Spell checking is the browser's; the app carries no dictionaries of its own.
+Which language gets checked follows the page's `lang`, which follows the
+language you picked — so English words in a Russian note are underlined until
+the English dictionary is enabled in the browser's own language settings, and
+the other way round. Autocorrect is off on purpose: silently rewriting words
+in someone's diary is not the same thing as underlining them.
 
-## Шрифт
+## Font
 
 iA Writer Quattro S, [SIL OFL 1.1](public/fonts/LICENSE.md), © Information
-Architects. Кириллица полная — шрифт построен на IBM Plex.
+Architects. Full Cyrillic coverage — the face is built on IBM Plex.
