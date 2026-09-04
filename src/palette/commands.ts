@@ -82,7 +82,7 @@ function commands(session: Session, palette: Palette): PaletteItem[] {
     { id: "lang-ru", label: t.langRu, run: () => setLang(session, "ru") },
     { id: "lang-en", label: t.langEn, run: () => setLang(session, "en") },
     { id: "folder", label: t.changeFolder, run: () => changeFolder(session) },
-  ].map((command) => ({ ...command, hint: t.commandHint }));
+  ].map((command) => ({ ...command, kind: "command" as const }));
 }
 
 /**

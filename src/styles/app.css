@@ -194,7 +194,7 @@ body {
 
 .palette__item {
   display: grid;
-  grid-template-columns: 1fr auto;
+  grid-template-columns: 1.125rem 1fr auto;
   align-items: baseline;
   gap: 0 0.75rem;
   padding: 0.4375rem 0.625rem;
@@ -204,6 +204,19 @@ body {
 
 .palette__item[aria-selected="true"] {
   background: var(--selection);
+}
+
+/*
+ * The empty pseudo-element is the gutter: it keeps every label starting at the
+ * same place, so only the commands carry a mark and the notes carry silence.
+ */
+.palette__item::before {
+  content: "";
+  color: var(--ink-muted);
+}
+
+.palette__item--command::before {
+  content: "\203a";
 }
 
 .palette__label {
@@ -219,7 +232,8 @@ body {
 }
 
 .palette__excerpt {
-  grid-column: 1 / -1;
+  /* Starts under the title, not under the gutter: it belongs to the note. */
+  grid-column: 2 / -1;
   font-size: 0.8125rem;
   line-height: 1.4;
   color: var(--ink-muted);

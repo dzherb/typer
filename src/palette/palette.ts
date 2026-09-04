@@ -4,6 +4,8 @@ import type { Excerpt } from "./match.ts";
 export interface PaletteItem {
   id: string;
   label: string;
+  /** Commands are marked in the margin; notes carry no mark. */
+  kind?: "command";
   /** Shown dimmed at the right — a file name, or what kind of thing this is. */
   hint?: string;
   /** A second line: the line of prose a full-text hit was found in. */
@@ -120,6 +122,16 @@ export class Palette {
       ...this.items.map((item, index) => {
         const row = document.createElement("li");
         row.className = "palette__item";
+        if (item.kind === "command") {
+          row.classList.add("palette__item--command");
+          /*
+           * The margin glyph is decorative, so the kind has to be spoken some
+           * other way. aria-label replaces the accessible name rather than
+           * adding to it, hence the label is repeated here — dropping it would
+           * leave a row announced as just "command".
+           */
+          row.setAttribute("aria-label", `${item.label}, ${t.commandHint}`);
+        }
         row.setAttribute("role", "option");
         row.setAttribute("aria-selected", String(index === this.active));
 
