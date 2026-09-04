@@ -10,6 +10,9 @@ import type { Palette, PaletteItem, PaletteSource } from "./palette.ts";
 const CONTENT_RANK = 5;
 const LIMIT = 40;
 
+/** The command that lists the commands; it is left out of its own list. */
+const LIST_ID = "commands";
+
 const WORD = /[\p{L}\p{N}][\p{L}\p{N}'’‑-]*/gu;
 
 function countWords(session: Session): void {
@@ -82,7 +85,27 @@ function commands(session: Session, palette: Palette): PaletteItem[] {
     { id: "lang-ru", label: t.langRu, run: () => setLang(session, "ru") },
     { id: "lang-en", label: t.langEn, run: () => setLang(session, "en") },
     { id: "folder", label: t.changeFolder, run: () => changeFolder(session) },
+    { id: LIST_ID, label: t.commands, run: () => palette.showCommands() },
   ].map((command) => ({ ...command, kind: "command" as const }));
+}
+
+/**
+ * The command mode: every command except the one that opened this list, in the
+ * order they are written above. Typing narrows the list rather than leaving it,
+ * so a note can never turn up here.
+ */
+function commandList(session: Session, palette: Palette, query: string): PaletteItem[] {
+  const all = commands(session, palette).filter((command) => command.id !== LIST_ID);
+  if (!query) return all;
+
+  const ranked: Array<{ item: PaletteItem; rank: number }> = [];
+
+  for (const command of all) {
+    const rank = score(command.label, query);
+    if (rank !== null) ranked.push({ item: command, rank });
+  }
+
+  return ranked.sort((a, b) => b.rank - a.rank).map(({ item }) => item);
 }
 
 /**
@@ -91,7 +114,9 @@ function commands(session: Session, palette: Palette): PaletteItem[] {
  * only in the body of a note.
  */
 export function createPaletteSource(session: Session, palette: Palette): PaletteSource {
-  return (query) => {
+  return (query, mode) => {
+    if (mode === "commands") return commandList(session, palette, query);
+
     const notes = session.list();
     const open = session.currentName();
 

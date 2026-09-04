@@ -12,6 +12,8 @@ A minimal markdown editor for daily notes. No server: the notes are ordinary
   serves static files.
 - **Navigation** — `Cmd+K`. Switching notes, full-text search, creating,
   renaming, deleting, word count, theme, language. Nothing else is on screen.
+  A `Commands` command lists the rest of them, with the notes out of the way;
+  typing then narrows that list, and Escape leaves it.
 - **Offline** — a service worker precaches the entire app.
 - **Spelling** — the browser's own checker, on by default. A palette command
   turns it off, and the choice is remembered.

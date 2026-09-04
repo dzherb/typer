@@ -50,7 +50,7 @@ try {
 
 // Constructed with a lazy source so the palette and its commands, which need
 // to reopen the palette, can refer to each other.
-const palette: Palette = new Palette((query) => source(query));
+const palette: Palette = new Palette((query, mode) => source(query, mode));
 const source = createPaletteSource(session, palette);
 
 window.addEventListener("keydown", (event) => {

@@ -50,6 +50,7 @@ const ru = {
 
   // The palette itself.
   palettePlaceholder: "Заметка, текст или команда",
+  commandPlaceholder: "Команда",
   paletteEmpty: "Ничего не найдено",
   commandHint: "команда",
   noteOpenHint: "открыта",
@@ -67,6 +68,7 @@ const ru = {
   langRu: "Язык: Русский",
   langEn: "Язык: English",
   changeFolder: "Сменить папку заметок",
+  commands: "Команды",
 
   // What those commands then ask or answer.
   renamePrompt: "Новое имя файла",
@@ -107,6 +109,7 @@ const en: typeof ru = {
   keepMine: "Keep mine",
 
   palettePlaceholder: "Note, text or command",
+  commandPlaceholder: "Command",
   paletteEmpty: "Nothing found",
   commandHint: "command",
   noteOpenHint: "open",
@@ -124,6 +127,7 @@ const en: typeof ru = {
   langRu: "Language: Русский",
   langEn: "Language: English",
   changeFolder: "Change notes folder",
+  commands: "Commands",
 
   renamePrompt: "New file name",
   confirmDelete: (name: string) => `Delete "${name}"? The file goes for good — there is no undo.`,

@@ -13,7 +13,14 @@ export interface PaletteItem {
   run: () => unknown;
 }
 
-export type PaletteSource = (query: string) => PaletteItem[];
+/**
+ * "all" is the everyday palette — notes, their text, and the commands mixed in.
+ * "commands" is the list of commands and nothing else; typing narrows it, and
+ * the only way out is closing the palette.
+ */
+export type PaletteMode = "all" | "commands";
+
+export type PaletteSource = (query: string, mode: PaletteMode) => PaletteItem[];
 
 export interface AskOptions {
   prompt: string;
@@ -33,6 +40,7 @@ export class Palette {
 
   private items: PaletteItem[] = [];
   private active = 0;
+  private mode: PaletteMode = "all";
   private asking: AskOptions | null = null;
 
   constructor(source: PaletteSource) {
@@ -64,7 +72,7 @@ export class Palette {
      * so a handler that resets state would land after a reopen that happened
      * in the same turn — which is exactly what "Rename note" does: it closes
      * the palette and immediately reopens it to ask for a name. State is set up
-     * on the way in instead, by open() and ask().
+     * on the way in instead, by open(), showCommands() and ask().
      */
   }
 
@@ -75,11 +83,26 @@ export class Palette {
   open(query = ""): void {
     if (this.dialog.open) return;
     this.asking = null;
+    this.mode = "all";
     this.input.placeholder = t.palettePlaceholder;
     this.input.value = query;
     this.dialog.showModal();
     this.refresh();
     this.input.select();
+  }
+
+  /**
+   * Show the commands, and only them. Reopens the dialog because a command runs
+   * after choose() has closed it — the same move "Rename note" makes below.
+   */
+  showCommands(): void {
+    if (this.dialog.open) this.dialog.close();
+    this.asking = null;
+    this.mode = "commands";
+    this.input.placeholder = t.commandPlaceholder;
+    this.input.value = "";
+    this.dialog.showModal();
+    this.refresh();
   }
 
   /** Borrow the same input to ask for a single value, e.g. a new name. */
@@ -107,7 +130,7 @@ export class Palette {
 
   private refresh(): void {
     if (this.asking) return;
-    this.items = this.source(this.input.value.trim());
+    this.items = this.source(this.input.value.trim(), this.mode);
     this.active = 0;
     this.render();
   }
