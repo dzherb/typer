@@ -96,17 +96,17 @@ more reliably.
 
 ## Version
 
-The number is `version` in `package.json`, set by hand. It goes up a minor when
-the palette gains or changes a command — that list is the whole surface of this
-app — a patch when something is fixed, and a major only if an existing folder of
-notes stops working the way it did.
+The number is `version` in `package.json`, set by hand. It goes up a minor
+when the palette gains or changes a command — that list is the whole surface
+of this app — a patch when something is fixed, and a major only if an existing
+folder of notes stops working the way it did.
 
-`About` shows it with the build behind it: `typer 0.1.0 · 7b44b5f+ · 2026-09-04
-14:32`. The hash is the commit, and the `+` means the working tree was dirty
-when it was built — `deploy.sh` builds the tree, not the commit, so without that
-mark the hash would name a commit the build does not contain. The same string,
-minus the name, is on `<html data-version>`, which is the quickest way to tell
-whether the service worker is still serving yesterday's bundle.
+`About` shows it with the build behind it: `typer 0.1.0 · 7b44b5f+ ·
+2026-09-04 14:32`. The hash is the commit, and the `+` means the working tree
+was dirty when it was built — `deploy.sh` builds the tree, not the commit, so
+without that mark the hash would name a commit the build does not contain. The
+same string, minus the name, is on `<html data-version>`, the quickest way to
+tell whether the service worker is still serving yesterday's bundle.
 
 A tag is written by hand at release, `git tag v0.1.0`. Nothing creates it
 automatically: a tag put on a dirty deploy would point at code that was never
