@@ -183,6 +183,8 @@ export class Session {
     await this.flush();
     const note = await this.vault.create();
     this.notes.set(note.name, note);
+    // Past the heading marker, on the spot where the title goes.
+    rememberCursor(note.name, note.text.length);
     await this.open(note.name);
   }
 

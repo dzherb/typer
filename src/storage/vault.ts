@@ -17,6 +17,9 @@ export interface Note {
 
 const EXT = ".md";
 
+/** What a new note holds: the marker of a heading waiting to be written. */
+export const NEW_NOTE = "# ";
+
 function isNoteFile(name: string): boolean {
   return name.endsWith(EXT) && !name.startsWith(".");
 }
@@ -93,11 +96,14 @@ export class Vault {
     return (await handle.getFile()).lastModified;
   }
 
-  /** An empty note under a provisional, date-only name. */
+  /**
+   * A new note under a provisional, date-only name, opened on a heading
+   * marker: a title is the first thing almost every note wants anyway.
+   */
   async create(at: Date = new Date()): Promise<Note> {
     const name = await this.freeName(`${dateStamp(at)}${EXT}`);
-    const modified = await this.write(name, "");
-    return { name, title: titleOf("", name), text: "", modified };
+    const modified = await this.write(name, NEW_NOTE);
+    return { name, title: titleOf(NEW_NOTE, name), text: NEW_NOTE, modified };
   }
 
   /**

@@ -63,7 +63,8 @@ const MAX_TITLE = 120;
 export function titleOf(text: string, fallback: string): string {
   for (const raw of text.split("\n")) {
     const line = raw.trim();
-    if (!line) continue;
+    // An empty heading is the marker a note starts under, not a title yet.
+    if (!line || /^#{1,6}$/.test(line)) continue;
 
     const heading = HEADING.exec(line);
     const title = heading ? heading[1] : line;
