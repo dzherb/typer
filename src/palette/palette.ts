@@ -1,3 +1,4 @@
+import { t } from "../i18n.ts";
 import type { Excerpt } from "./match.ts";
 
 export interface PaletteItem {
@@ -59,7 +60,7 @@ export class Palette {
     /*
      * Deliberately no "close" handler. The event is delivered asynchronously,
      * so a handler that resets state would land after a reopen that happened
-     * in the same turn — which is exactly what "Переименовать" does: it closes
+     * in the same turn — which is exactly what "Rename note" does: it closes
      * the palette and immediately reopens it to ask for a name. State is set up
      * on the way in instead, by open() and ask().
      */
@@ -72,7 +73,7 @@ export class Palette {
   open(query = ""): void {
     if (this.dialog.open) return;
     this.asking = null;
-    this.input.placeholder = "Заметка, текст или команда";
+    this.input.placeholder = t.palettePlaceholder;
     this.input.value = query;
     this.dialog.showModal();
     this.refresh();
@@ -111,7 +112,7 @@ export class Palette {
 
   private render(): void {
     if (this.items.length === 0) {
-      this.renderHint("Ничего не найдено");
+      this.renderHint(t.paletteEmpty);
       return;
     }
 

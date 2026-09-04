@@ -1,3 +1,4 @@
+import { applyLang, t, type Lang } from "../i18n.ts";
 import { applyTheme, updateSettings, type Theme } from "../settings.ts";
 import type { Session } from "../session.ts";
 import { forgetVault } from "../storage/handle.ts";
@@ -5,19 +6,9 @@ import { notice } from "../ui/notice.ts";
 import { excerpt, score } from "./match.ts";
 import type { Palette, PaletteItem, PaletteSource } from "./palette.ts";
 
-const COMMAND = "команда";
 /** Full-text hits rank below every title match, whatever their content. */
 const CONTENT_RANK = 5;
 const LIMIT = 40;
-
-function plural(n: number, forms: [string, string, string]): string {
-  const mod100 = n % 100;
-  if (mod100 >= 11 && mod100 <= 14) return forms[2];
-  const mod10 = n % 10;
-  if (mod10 === 1) return forms[0];
-  if (mod10 >= 2 && mod10 <= 4) return forms[1];
-  return forms[2];
-}
 
 const WORD = /[\p{L}\p{N}][\p{L}\p{N}'’‑-]*/gu;
 
@@ -25,19 +16,15 @@ function countWords(session: Session): void {
   const text = session.text();
   const words = text.match(WORD)?.length ?? 0;
   const chars = [...text].length;
-  notice(
-    `${words} ${plural(words, ["слово", "слова", "слов"])}, ` +
-      `${chars} ${plural(chars, ["знак", "знака", "знаков"])}.`,
-    { timeout: 5000 },
-  );
+  notice(t.wordCount(words, chars), { timeout: 5000 });
 }
 
 function confirmDelete(session: Session): void {
   const name = session.currentName();
   if (!name) return;
 
-  notice(`Удалить «${name}»? Файл исчезнет без Корзины.`, {
-    actions: [{ label: "Удалить", run: () => void session.deleteCurrent() }],
+  notice(t.confirmDelete(name), {
+    actions: [{ label: t.deleteIt, run: () => void session.deleteCurrent() }],
     timeout: 12000,
   });
 }
@@ -47,7 +34,7 @@ function renameCurrent(session: Session, palette: Palette): void {
   if (!name) return;
 
   palette.ask({
-    prompt: "Новое имя файла",
+    prompt: t.renamePrompt,
     initial: name.replace(/\.md$/, ""),
     submit: (value) => session.renameCurrent(value),
   });
@@ -58,6 +45,17 @@ function setTheme(theme: Theme): void {
   updateSettings({ theme });
 }
 
+/*
+ * The editor is told to look again because the document language changed under
+ * it: without that, the note keeps the underlines the previous dictionary drew
+ * and the switch looks broken.
+ */
+function setLang(session: Session, lang: Lang): void {
+  applyLang(lang);
+  updateSettings({ lang });
+  session.refreshSpellcheck();
+}
+
 async function changeFolder(session: Session): Promise<void> {
   await session.flush();
   await forgetVault();
@@ -66,20 +64,25 @@ async function changeFolder(session: Session): Promise<void> {
 
 function commands(session: Session, palette: Palette): PaletteItem[] {
   return [
-    { id: "new", label: "Новая заметка", run: () => session.createNote() },
-    { id: "rename", label: "Переименовать заметку", run: () => renameCurrent(session, palette) },
-    { id: "delete", label: "Удалить заметку", run: () => confirmDelete(session) },
-    { id: "count", label: "Сколько слов", run: () => countWords(session) },
+    { id: "new", label: t.newNote, run: () => session.createNote() },
+    { id: "rename", label: t.renameNote, run: () => renameCurrent(session, palette) },
+    { id: "delete", label: t.deleteNote, run: () => confirmDelete(session) },
+    { id: "count", label: t.countWords, run: () => countWords(session) },
     {
       id: "spellcheck",
-      label: session.spellcheckEnabled() ? "Орфография: выключить" : "Орфография: включить",
+      label: session.spellcheckEnabled() ? t.spellcheckOff : t.spellcheckOn,
       run: () => session.setSpellcheckEnabled(!session.spellcheckEnabled()),
     },
-    { id: "theme-system", label: "Тема: системная", run: () => setTheme("system") },
-    { id: "theme-light", label: "Тема: светлая", run: () => setTheme("light") },
-    { id: "theme-dark", label: "Тема: тёмная", run: () => setTheme("dark") },
-    { id: "folder", label: "Сменить папку заметок", run: () => changeFolder(session) },
-  ].map((command) => ({ ...command, hint: COMMAND }));
+    { id: "theme-system", label: t.themeSystem, run: () => setTheme("system") },
+    { id: "theme-light", label: t.themeLight, run: () => setTheme("light") },
+    { id: "theme-dark", label: t.themeDark, run: () => setTheme("dark") },
+    // Each language is named in itself, so either one is findable from the
+    // other: "english" hits it in a Russian interface and "русский" in an
+    // English one.
+    { id: "lang-ru", label: t.langRu, run: () => setLang(session, "ru") },
+    { id: "lang-en", label: t.langEn, run: () => setLang(session, "en") },
+    { id: "folder", label: t.changeFolder, run: () => changeFolder(session) },
+  ].map((command) => ({ ...command, hint: t.commandHint }));
 }
 
 /**
@@ -99,7 +102,7 @@ export function createPaletteSource(session: Session, palette: Palette): Palette
         ...notes.map((note) => ({
           id: note.name,
           label: note.title,
-          hint: note.name === open ? "открыта" : note.name,
+          hint: note.name === open ? t.noteOpenHint : note.name,
           run: () => session.open(note.name),
         })),
       ];
@@ -122,7 +125,7 @@ export function createPaletteSource(session: Session, palette: Palette): Palette
           item: {
             id: note.name,
             label: note.title,
-            hint: note.name === open ? "открыта" : note.name,
+            hint: note.name === open ? t.noteOpenHint : note.name,
             run: () => session.open(note.name),
           },
           rank,

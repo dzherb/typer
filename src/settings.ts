@@ -1,9 +1,16 @@
+import type { Lang } from "./i18n.ts";
+
 export type Theme = "system" | "light" | "dark";
 
 export interface Settings {
   theme: Theme;
   /** Whether the browser underlines misspellings as you write. */
   spellcheck: boolean;
+  /**
+   * Language of the interface. Absent until someone picks one, which is what
+   * lets the first run fall back to the browser's own language.
+   */
+  lang?: Lang;
   /** Name of the note to reopen on startup. */
   lastNote?: string;
 }

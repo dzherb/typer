@@ -1,6 +1,7 @@
 import type { EditorView } from "@codemirror/view";
 
-import { createEditor, loadDocument, setSpellcheck } from "./editor/editor.ts";
+import { createEditor, loadDocument, recheckSpelling, setSpellcheck } from "./editor/editor.ts";
+import { t } from "./i18n.ts";
 import { readSettings, updateSettings } from "./settings.ts";
 import { titleOf } from "./storage/naming.ts";
 import type { Note } from "./storage/vault.ts";
@@ -81,6 +82,11 @@ export class Session {
     return this.spellcheck;
   }
 
+  /** Re-check the open note after the document language changed under it. */
+  refreshSpellcheck(): void {
+    recheckSpelling(this.view, this.spellcheck);
+  }
+
   setSpellcheckEnabled(enabled: boolean): void {
     this.spellcheck = enabled;
     setSpellcheck(this.view, enabled);
@@ -130,7 +136,7 @@ export class Session {
       this.notes.set(settled, { name: settled, title: titleOf(text, settled), text, modified });
     } catch (error) {
       this.dirty = true;
-      notice(`Не удалось сохранить: ${reason(error)}`, { timeout: 8000 });
+      notice(t.saveFailed(reason(error)), { timeout: 8000 });
     }
   }
 
@@ -197,8 +203,8 @@ export class Session {
 
     const modified = await this.vault.modifiedAt(name);
     if (modified === null) {
-      notice(`Файл «${name}» исчез с диска. Сохранить заново?`, {
-        actions: [{ label: "Сохранить", run: () => { this.dirty = true; void this.flush(); } }],
+      notice(t.fileVanished(name), {
+        actions: [{ label: t.saveAgain, run: () => { this.dirty = true; void this.flush(); } }],
       });
       return;
     }
@@ -207,7 +213,7 @@ export class Session {
 
     if (!this.dirty) {
       await this.open(name);
-      notice("Заметка обновлена с диска.", { timeout: 4000 });
+      notice(t.reloadedFromDisk, { timeout: 4000 });
       return;
     }
 
@@ -216,10 +222,10 @@ export class Session {
     this.conflicted = true;
     clearTimeout(this.timer);
 
-    notice(`«${name}» изменён снаружи, а здесь есть несохранённые правки.`, {
+    notice(t.editedOutside(name), {
       actions: [
         {
-          label: "Взять с диска",
+          label: t.takeDiskCopy,
           run: () => {
             this.conflicted = false;
             this.dirty = false;
@@ -227,7 +233,7 @@ export class Session {
           },
         },
         {
-          label: "Оставить мои",
+          label: t.keepMine,
           run: () => {
             this.conflicted = false;
             this.baseline = modified;

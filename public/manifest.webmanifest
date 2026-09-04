@@ -1,8 +1,8 @@
 {
   "name": "typer",
   "short_name": "typer",
-  "description": "Минимальный редактор markdown. Заметки — обычные файлы в папке на диске.",
-  "lang": "ru",
+  "description": "A minimal markdown editor. Notes are plain files in a folder on disk.",
+  "lang": "en",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

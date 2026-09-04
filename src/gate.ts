@@ -6,15 +6,13 @@ import {
   rememberVault,
   supportsFileSystemAccess,
 } from "./storage/handle.ts";
+import { t } from "./i18n.ts";
 import { Vault } from "./storage/vault.ts";
 
 interface Choice {
   label: string;
   run: () => Promise<FileSystemDirectoryHandle>;
 }
-
-const PICK_PROMPT =
-  "Где держать заметки? Выберите папку — в ней будут лежать обычные .md файлы.";
 
 function render(parent: HTMLElement, prompt: string, choices: Choice[], error?: string) {
   const gate = document.createElement("div");
@@ -74,21 +72,17 @@ async function isReachable(handle: FileSystemDirectoryHandle): Promise<boolean> 
 export function requestVault(parent: HTMLElement): Promise<Vault> {
   return new Promise((resolve) => {
     if (!supportsFileSystemAccess()) {
-      render(
-        parent,
-        "typer хранит заметки файлами на диске, а этот браузер не умеет давать доступ к папке. Нужен Chrome, Yandex Browser или другой Chromium.",
-        [],
-      );
+      render(parent, t.unsupportedBrowser, []);
       return;
     }
 
     /** Resolves the outer promise, or returns why it could not. */
     const accept = async (handle: FileSystemDirectoryHandle): Promise<string | null> => {
       if (!(await hasAccess(handle, true))) {
-        return "Без доступа к папке заметки негде хранить.";
+        return t.noFolderAccess;
       }
       if (!(await isReachable(handle))) {
-        return `Папку «${handle.name}» не удалось прочитать. Возможно, её переместили или удалили.`;
+        return t.folderUnreadable(handle.name);
       }
       await rememberVault(handle);
       resolve(new Vault(handle));
@@ -113,20 +107,20 @@ export function requestVault(parent: HTMLElement): Promise<Vault> {
             if (thrown instanceof DOMException && thrown.name === "AbortError") {
               button.disabled = false;
             } else {
-              screen(prompt, choices, "Не удалось открыть папку.");
+              screen(prompt, choices, t.folderOpenFailed);
             }
           }
         })();
       });
     };
 
-    const pick: Choice = { label: "Выбрать папку", run: pickVault };
+    const pick: Choice = { label: t.pickFolder, run: pickVault };
 
     void (async () => {
       const remembered = await recallVault().catch(() => undefined);
 
       if (!remembered) {
-        screen(PICK_PROMPT, [pick]);
+        screen(t.pickPrompt, [pick]);
         return;
       }
 
@@ -137,17 +131,13 @@ export function requestVault(parent: HTMLElement): Promise<Vault> {
           return;
         }
         await forgetVault().catch(() => undefined);
-        screen(
-          PICK_PROMPT,
-          [pick],
-          `Папки «${remembered.name}» больше нет там, где она была. Выберите её заново.`,
-        );
+        screen(t.pickPrompt, [pick], t.folderMoved(remembered.name));
         return;
       }
 
-      screen(`Открыть заметки в папке «${remembered.name}»?`, [
-        { label: "Открыть", run: async () => remembered },
-        { label: "Выбрать другую папку", run: pickVault },
+      screen(t.openFolderIn(remembered.name), [
+        { label: t.openFolder, run: async () => remembered },
+        { label: t.pickAnotherFolder, run: pickVault },
       ]);
     })();
   });

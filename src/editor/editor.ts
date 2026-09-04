@@ -66,3 +66,20 @@ export function loadDocument(view: EditorView, config: EditorConfig): void {
 export function setSpellcheck(view: EditorView, enabled: boolean): void {
   view.dispatch({ effects: spellcheckSlot.reconfigure(spellcheckAttribute(enabled)) });
 }
+
+/**
+ * Make the browser check the note again, against whatever dictionary the
+ * document language now names.
+ *
+ * Changing `<html lang>` does not by itself invalidate the underlines already
+ * drawn: they sit there until the text next changes. Someone who switches
+ * language and sees the old dictionary's marks concludes the switch did not
+ * work. Turning the attribute off and back on over a frame boundary is what
+ * makes the browser start over — within one frame it coalesces the two writes
+ * and nothing happens.
+ */
+export function recheckSpelling(view: EditorView, enabled: boolean): void {
+  if (!enabled) return;
+  setSpellcheck(view, false);
+  requestAnimationFrame(() => setSpellcheck(view, true));
+}

@@ -3,6 +3,7 @@ import "./styles/theme.css";
 import "./styles/app.css";
 
 import { requestVault } from "./gate.ts";
+import { applyLang, detectLang, t } from "./i18n.ts";
 import { createPaletteSource } from "./palette/commands.ts";
 import { Palette } from "./palette/palette.ts";
 import { Session } from "./session.ts";
@@ -23,6 +24,9 @@ if (import.meta.env.PROD && "serviceWorker" in navigator) {
 const app = document.querySelector<HTMLDivElement>("#app")!;
 
 applyTheme(readSettings().theme);
+// Before the gate: it is the first thing anyone reads, and on a first visit it
+// is the only thing they read before choosing a language is even possible.
+applyLang(readSettings().lang ?? detectLang());
 
 const vault = await requestVault(app);
 app.replaceChildren();
@@ -33,10 +37,10 @@ try {
 } catch (error) {
   // The gate checked the folder a moment ago, so this is something unforeseen.
   // Say so and offer a way out rather than leaving a dead screen.
-  notice(`Не удалось прочитать папку: ${error instanceof Error ? error.message : String(error)}`, {
+  notice(t.folderReadFailed(error instanceof Error ? error.message : String(error)), {
     actions: [
       {
-        label: "Выбрать другую папку",
+        label: t.pickAnotherFolder,
         run: () => void forgetVault().finally(() => location.reload()),
       },
     ],
