@@ -1,4 +1,4 @@
-import { Compartment, EditorState, type Extension } from "@codemirror/state";
+import { Compartment, EditorSelection, EditorState, type Extension } from "@codemirror/state";
 import { EditorView, drawSelection, keymap } from "@codemirror/view";
 import { defaultKeymap, history, historyKeymap } from "@codemirror/commands";
 import { LanguageSupport, syntaxHighlighting } from "@codemirror/language";
@@ -8,10 +8,12 @@ import { hangingIndent } from "./hanging-indent.ts";
 import { markdownHighlight } from "./highlight.ts";
 import { markdownKeymap } from "./markdown-keys.ts";
 import { editorTheme } from "./theme.ts";
-import { typewriter } from "./typewriter.ts";
+import { scrollToAnchor, typewriter } from "./typewriter.ts";
 
 export interface EditorConfig {
   doc?: string;
+  /** Offset to put the caret at; clamped, so a stale one is harmless. */
+  cursor?: number;
   spellcheck: boolean;
   onChange?: (doc: string) => void;
 }
@@ -60,7 +62,21 @@ export function createEditor(parent: HTMLElement, config: EditorConfig): EditorV
  * purpose: undo must not reach back across a note boundary.
  */
 export function loadDocument(view: EditorView, config: EditorConfig): void {
-  view.setState(EditorState.create({ doc: config.doc ?? "", extensions: baseExtensions(config) }));
+  const doc = config.doc ?? "";
+  // The file may have been cut short since we last saw it.
+  const head = Math.min(Math.max(config.cursor ?? 0, 0), doc.length);
+
+  view.setState(
+    EditorState.create({
+      doc,
+      selection: EditorSelection.cursor(head),
+      extensions: baseExtensions(config),
+    }),
+  );
+
+  // A new state starts scrolled to the top, and nothing has moved the caret,
+  // so the typewriter has no edit to react to: the anchoring is asked for.
+  scrollToAnchor(view, head);
 }
 
 export function setSpellcheck(view: EditorView, enabled: boolean): void {

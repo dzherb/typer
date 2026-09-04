@@ -33,6 +33,21 @@ function shouldReanchor(update: ViewUpdate) {
   );
 }
 
+/**
+ * Bring a position onto the anchor line in one scroll — for a note just opened
+ * at a remembered caret. Left to the editor rather than measured here: the
+ * line is not rendered yet, so its height is still an estimate the editor has
+ * to correct before it can settle on a scroll position.
+ */
+export function scrollToAnchor(view: EditorView, pos: number): void {
+  view.dispatch({
+    effects: EditorView.scrollIntoView(pos, {
+      y: "start",
+      yMargin: view.scrollDOM.clientHeight * TYPEWRITER_ANCHOR,
+    }),
+  });
+}
+
 export function typewriter() {
   return EditorView.updateListener.of((update) => {
     if (shouldReanchor(update)) {

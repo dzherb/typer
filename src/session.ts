@@ -1,5 +1,12 @@
 import type { EditorView } from "@codemirror/view";
 
+import {
+  forgetCursor,
+  pruneCursors,
+  recallCursor,
+  rememberCursor,
+  renameCursor,
+} from "./cursors.ts";
 import { createEditor, loadDocument, recheckSpelling, setSpellcheck } from "./editor/editor.ts";
 import { t } from "./i18n.ts";
 import { readSettings, updateSettings } from "./settings.ts";
@@ -59,6 +66,7 @@ export class Session {
   async reindex(): Promise<void> {
     const notes = await this.vault.load();
     this.notes = new Map(notes.map((note) => [note.name, note]));
+    pruneCursors(this.notes.keys());
   }
 
   /** Every note, newest first. */
@@ -93,6 +101,11 @@ export class Session {
     updateSettings({ spellcheck: enabled });
   }
 
+  /** Note where the caret stands, so this note can be reopened on that word. */
+  private saveCursor(): void {
+    if (this.name) rememberCursor(this.name, this.view.state.selection.main.head);
+  }
+
   private touch(): void {
     this.dirty = true;
     clearTimeout(this.timer);
@@ -120,6 +133,7 @@ export class Session {
     const text = this.text();
     // Cleared before the write: anything typed during it re-arms the timer.
     this.dirty = false;
+    this.saveCursor();
 
     try {
       let modified = await this.vault.write(name, text);
@@ -127,6 +141,7 @@ export class Session {
 
       if (settled !== name) {
         this.notes.delete(name);
+        renameCursor(name, settled);
         if (this.name === name) this.name = settled;
         updateSettings({ lastNote: settled });
         modified = (await this.vault.modifiedAt(settled)) ?? modified;
@@ -141,6 +156,8 @@ export class Session {
   }
 
   async open(name: string): Promise<void> {
+    // Before anything awaits, while the caret is still the one being left.
+    this.saveCursor();
     await this.flush();
 
     const note = await this.vault.read(name);
@@ -152,6 +169,7 @@ export class Session {
 
     loadDocument(this.view, {
       doc: note.text,
+      cursor: recallCursor(note.name),
       spellcheck: this.spellcheck,
       onChange: this.handleChange,
     });
@@ -170,9 +188,11 @@ export class Session {
     const name = this.name;
     if (!name) return;
 
+    this.saveCursor();
     await this.flush();
     const settled = await this.vault.rename(name, to.endsWith(".md") ? to : `${to}.md`);
     this.notes.delete(name);
+    renameCursor(name, settled);
     await this.reindex();
     await this.open(settled);
   }
@@ -185,6 +205,7 @@ export class Session {
     this.dirty = false;
     await this.vault.remove(name);
     this.notes.delete(name);
+    forgetCursor(name);
     this.name = null;
 
     const next = this.list()[0]?.name;
@@ -245,14 +266,20 @@ export class Session {
     });
   }
 
+  /** Put the note down: the text on disk, the caret where it can be found. */
+  private leave(): void {
+    this.saveCursor();
+    void this.flush();
+  }
+
   private watchLifecycle(): void {
     document.addEventListener("visibilitychange", () => {
-      if (document.visibilityState === "hidden") void this.flush();
+      if (document.visibilityState === "hidden") this.leave();
       else void this.checkForOutsideEdits();
     });
-    window.addEventListener("blur", () => void this.flush());
+    window.addEventListener("blur", () => this.leave());
     window.addEventListener("focus", () => void this.checkForOutsideEdits());
     // Last chance on the way out; the write usually completes.
-    window.addEventListener("pagehide", () => void this.flush());
+    window.addEventListener("pagehide", () => this.leave());
   }
 }
