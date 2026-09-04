@@ -10,6 +10,7 @@ import { Session } from "./session.ts";
 import { applyTheme, readSettings } from "./settings.ts";
 import { forgetVault } from "./storage/handle.ts";
 import { notice } from "./ui/notice.ts";
+import { versionLine } from "./version.ts";
 
 /*
  * Registered first, and deliberately not behind the "load" event: the module
@@ -20,6 +21,14 @@ import { notice } from "./ui/notice.ts";
 if (import.meta.env.PROD && "serviceWorker" in navigator) {
   void navigator.serviceWorker.register("/sw.js");
 }
+
+/*
+ * Set here rather than baked into index.html, so it names the bundle that is
+ * actually running. The document arrives fresh from the network while the
+ * script can come out of the worker's cache, and when those disagree this is
+ * the attribute that says so.
+ */
+document.documentElement.dataset.version = versionLine;
 
 const app = document.querySelector<HTMLDivElement>("#app")!;
 

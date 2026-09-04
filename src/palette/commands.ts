@@ -3,6 +3,7 @@ import { applyTheme, updateSettings, type Theme } from "../settings.ts";
 import type { Session } from "../session.ts";
 import { forgetVault } from "../storage/handle.ts";
 import { notice } from "../ui/notice.ts";
+import { versionLine } from "../version.ts";
 import { excerpt, score } from "./match.ts";
 import type { Palette, PaletteItem, PaletteSource } from "./palette.ts";
 
@@ -12,6 +13,8 @@ const LIMIT = 40;
 
 /** The command that lists the commands; it is left out of its own list. */
 const LIST_ID = "commands";
+
+const REPO = "https://github.com/dzherb/typer";
 
 const WORD = /[\p{L}\p{N}][\p{L}\p{N}'’‑-]*/gu;
 
@@ -59,6 +62,19 @@ function setLang(session: Session, lang: Lang): void {
   session.refreshSpellcheck();
 }
 
+/*
+ * The version, and the one place it is worth carrying to. Timed out rather
+ * than left standing: nothing here is a question, so letting it go answers
+ * nothing badly — but it is a hex hash and a clock, read a character at a
+ * time, so it gets the length of an error rather than of a word count.
+ */
+function showAbout(): void {
+  notice(`typer ${versionLine}`, {
+    actions: [{ label: t.repo, run: () => window.open(REPO, "_blank", "noopener") }],
+    timeout: 8000,
+  });
+}
+
 async function changeFolder(session: Session): Promise<void> {
   await session.flush();
   await forgetVault();
@@ -85,6 +101,7 @@ function commands(session: Session, palette: Palette): PaletteItem[] {
     { id: "lang-ru", label: t.langRu, run: () => setLang(session, "ru") },
     { id: "lang-en", label: t.langEn, run: () => setLang(session, "en") },
     { id: "folder", label: t.changeFolder, run: () => changeFolder(session) },
+    { id: "about", label: t.about, run: () => showAbout() },
     { id: LIST_ID, label: t.commands, run: () => palette.showCommands() },
   ].map((command) => ({ ...command, kind: "command" as const }));
 }

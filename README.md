@@ -13,7 +13,8 @@ A minimal markdown editor for daily notes. No server: the notes are ordinary
 - **Navigation** — `Cmd+K`. Switching notes, full-text search, creating,
   renaming, deleting, word count, theme, language. Nothing else is on screen.
   A `Commands` command lists the rest of them, with the notes out of the way;
-  typing then narrows that list, and Escape leaves it.
+  typing then narrows that list, and Escape leaves it. `About` is where the
+  version lives.
 - **Offline** — a service worker precaches the entire app.
 - **Spelling** — the browser's own checker, on by default. A palette command
   turns it off, and the choice is remembered.
@@ -92,6 +93,24 @@ sudo nginx -t && sudo systemctl reload nginx
 Then open `https://typer.dzherb.ru`, pick a folder and install it as an app —
 in its own window, without browser chrome, the folder permission sticks far
 more reliably.
+
+## Version
+
+The number is `version` in `package.json`, set by hand. It goes up a minor when
+the palette gains or changes a command — that list is the whole surface of this
+app — a patch when something is fixed, and a major only if an existing folder of
+notes stops working the way it did.
+
+`About` shows it with the build behind it: `typer 0.1.0 · 7b44b5f+ · 2026-09-04
+14:32`. The hash is the commit, and the `+` means the working tree was dirty
+when it was built — `deploy.sh` builds the tree, not the commit, so without that
+mark the hash would name a commit the build does not contain. The same string,
+minus the name, is on `<html data-version>`, which is the quickest way to tell
+whether the service worker is still serving yesterday's bundle.
+
+A tag is written by hand at release, `git tag v0.1.0`. Nothing creates it
+automatically: a tag put on a dirty deploy would point at code that was never
+shipped, and a tag that lies is worse than no tag.
 
 ## Browsers
 

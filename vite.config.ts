@@ -1,5 +1,6 @@
+import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { readdirSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { defineConfig, type Plugin } from "vite";
 
@@ -88,6 +89,43 @@ self.addEventListener("fetch", (event) => {
   };
 }
 
+function git(...args: string[]): string {
+  return execFileSync("git", args, { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] }).trim();
+}
+
+/**
+ * The second half of the version: which commit this was built from, and when.
+ *
+ * `deploy.sh` builds the working tree rather than a commit, so a bare hash can
+ * lie — it names a commit that is missing whatever was still uncommitted. The
+ * `+` is what keeps it honest. Empty when there is no git at all: someone
+ * building from a downloaded archive gets a version without a build, not a
+ * failed build.
+ */
+function buildStamp(): string {
+  let commit: string;
+  try {
+    commit = git("rev-parse", "--short", "HEAD") + (git("status", "--porcelain") ? "+" : "");
+  } catch {
+    return "";
+  }
+
+  // Deliberately ISO rather than localized: the notes on disk are named
+  // 2026-09-04.md, and the version speaks the same dates the files do.
+  const now = new Date();
+  const pad = (n: number) => String(n).padStart(2, "0");
+  const date = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+  const time = `${pad(now.getHours())}:${pad(now.getMinutes())}`;
+
+  return `${commit} · ${date} ${time}`;
+}
+
+const { version } = JSON.parse(readFileSync("package.json", "utf8")) as { version: string };
+
 export default defineConfig({
   plugins: [serviceWorker()],
+  define: {
+    __VERSION__: JSON.stringify(version),
+    __BUILD__: JSON.stringify(buildStamp()),
+  },
 });

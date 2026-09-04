@@ -68,6 +68,7 @@ const ru = {
   langRu: "Язык: Русский",
   langEn: "Язык: English",
   changeFolder: "Сменить папку заметок",
+  about: "О программе",
   commands: "Команды",
 
   // What those commands then ask or answer.
@@ -77,6 +78,9 @@ const ru = {
   wordCount: (words: number, chars: number) =>
     `${words} ${plural(words, ["слово", "слова", "слов"])}, ` +
     `${chars} ${plural(chars, ["знак", "знака", "знаков"])}.`,
+  // Untranslated on purpose: it names a site, and a person looking for the
+  // sources looks for that word whichever language the interface is in.
+  repo: "GitHub",
 };
 
 /*
@@ -127,6 +131,7 @@ const en: typeof ru = {
   langRu: "Language: Русский",
   langEn: "Language: English",
   changeFolder: "Change notes folder",
+  about: "About",
   commands: "Commands",
 
   renamePrompt: "New file name",
@@ -134,6 +139,7 @@ const en: typeof ru = {
   deleteIt: "Delete",
   wordCount: (words: number, chars: number) =>
     `${words} word${words === 1 ? "" : "s"}, ${chars} character${chars === 1 ? "" : "s"}.`,
+  repo: "GitHub",
 };
 
 const CATALOGUES: Record<Lang, typeof ru> = { ru, en };
