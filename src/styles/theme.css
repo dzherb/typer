@@ -18,7 +18,14 @@
   --overlay: rgba(28, 27, 24, 0.18);
   --shadow: 0 18px 48px -12px rgba(28, 27, 24, 0.22);
 
-  --measure: 34rem;
+  /*
+   * The prose column, and the wider one a table is allowed. A table is not
+   * prose: its line is as long as its columns need, and holding it to the
+   * measure of a paragraph wraps it into rubble. Past the wider one it wraps
+   * like anything else — about eighty monospaced columns fit before that.
+   */
+  --measure: 31rem;
+  --measure-table: 49rem;
   --text-size: 1.125rem;
   --line-height: 1.7;
 

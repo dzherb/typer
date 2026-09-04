@@ -1,6 +1,8 @@
 import { HighlightStyle } from "@codemirror/language";
 import { tags as t } from "@lezer/highlight";
 
+import { MONO_FAMILY } from "./theme.ts";
+
 /*
  * The iA Writer model: markup is never hidden, only quietened. Headings and
  * emphasis get their real weight, while the characters that produce them fade
@@ -25,7 +27,7 @@ export const markdownHighlight = HighlightStyle.define([
   { tag: t.contentSeparator, color: "var(--ink-faint)" },
   {
     tag: [t.monospace, t.labelName],
-    fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace",
+    fontFamily: MONO_FAMILY,
     fontSize: "0.9em",
     color: "var(--ink-muted)",
   },

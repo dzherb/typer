@@ -6,6 +6,8 @@ export interface Settings {
   theme: Theme;
   /** Whether the browser underlines misspellings as you write. */
   spellcheck: boolean;
+  /** Whether a table lines its own pipes up as the caret leaves it. */
+  autoAlign: boolean;
   /**
    * Language of the interface. Absent until someone picks one, which is what
    * lets the first run fall back to the browser's own language.
@@ -16,7 +18,7 @@ export interface Settings {
 }
 
 const KEY = "typer.settings";
-const DEFAULTS: Settings = { theme: "system", spellcheck: true };
+const DEFAULTS: Settings = { theme: "system", spellcheck: true, autoAlign: true };
 
 /* Storage can throw outright in a private window, so every access is guarded. */
 

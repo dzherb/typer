@@ -14,10 +14,10 @@ Running at <https://typer.dzherb.ru>. Chromium only, for the reason under
   handle lives in IndexedDB. Nothing leaves the machine: the server only
   serves static files.
 - **Navigation** — `Cmd+K`. Switching notes, full-text search, creating,
-  renaming, deleting, word count, theme, language. Nothing else is on screen.
-  A `Commands` command lists the rest of them, with the notes out of the way;
-  typing then narrows that list, and Escape leaves it. `About` is where the
-  version lives.
+  renaming, deleting, aligning tables, word count, theme, language. Nothing
+  else is on screen. A `Commands` command lists the rest of them, with the
+  notes out of the way; typing then narrows that list, and Escape leaves it.
+  `About` is where the version lives.
 - **Offline** — a service worker precaches the entire app.
 - **Spelling** — the browser's own checker, on by default. A palette command
   turns it off, and the choice is remembered.
@@ -30,6 +30,25 @@ Running at <https://typer.dzherb.ru>. Chromium only, for the reason under
 | `Enter` | continues a list or a quote; on an empty item it leaves the list |
 | `Tab` / `Shift+Tab` | indent level of the item |
 | `Cmd+B` / `Cmd+I` | bold / italic |
+
+## Tables
+
+The pipes are lined up in the file, not only on screen: cells are padded to a
+common width, the delimiter row is stretched to match, and a row short of
+cells is given them. This happens when the caret leaves the table, never while
+you are typing inside one — re-padding on every keystroke would slide the
+columns out from under the word being written.
+
+`Cmd+K` → `Align tables` does the whole note at once, which is what a table
+pasted in from somewhere else needs. The automatic half can be turned off —
+`Cmd+K` → `Table auto-align` — and the choice is remembered; what is left then
+is that command, so a table is aligned when you ask and never on its own.
+
+Rows are set in the same monospace as code spans, because a column lines up
+only where a space is as wide as a letter, and they are allowed wider than the
+measure the prose keeps to. A table too wide even for that wraps like any
+other line: a horizontal scrollbar under a page of writing costs more than the
+rare table it would save.
 
 ## File names
 

@@ -7,8 +7,15 @@ import {
   rememberCursor,
   renameCursor,
 } from "./cursors.ts";
-import { createEditor, loadDocument, recheckSpelling, setSpellcheck } from "./editor/editor.ts";
+import {
+  createEditor,
+  loadDocument,
+  recheckSpelling,
+  setAutoAlign,
+  setSpellcheck,
+} from "./editor/editor.ts";
 import { keepCaret } from "./editor/focus.ts";
+import { alignTables } from "./editor/tables.ts";
 import { t } from "./i18n.ts";
 import { readSettings, updateSettings } from "./settings.ts";
 import { titleOf } from "./storage/naming.ts";
@@ -38,12 +45,16 @@ export class Session {
   private writes: Promise<unknown> = Promise.resolve();
   private conflicted = false;
   private spellcheck: boolean;
+  private autoAlign: boolean;
 
   private constructor(vault: Vault, parent: HTMLElement) {
     this.vault = vault;
-    this.spellcheck = readSettings().spellcheck;
+    const settings = readSettings();
+    this.spellcheck = settings.spellcheck;
+    this.autoAlign = settings.autoAlign;
     this.view = createEditor(parent, {
       spellcheck: this.spellcheck,
+      autoAlign: this.autoAlign,
       onChange: this.handleChange,
     });
     keepCaret(this.view);
@@ -86,6 +97,25 @@ export class Session {
 
   focus(): void {
     this.view.focus();
+  }
+
+  /**
+   * Line the pipes up in every table in the note. With the automatic kind on,
+   * tables settle as the caret leaves them and this is for the ones that
+   * arrived already ragged; with it off, it is the only thing that aligns them.
+   */
+  alignTables(): void {
+    alignTables(this.view);
+  }
+
+  autoAlignEnabled(): boolean {
+    return this.autoAlign;
+  }
+
+  setAutoAlignEnabled(enabled: boolean): void {
+    this.autoAlign = enabled;
+    setAutoAlign(this.view, enabled);
+    updateSettings({ autoAlign: enabled });
   }
 
   spellcheckEnabled(): boolean {
@@ -173,6 +203,7 @@ export class Session {
       doc: note.text,
       cursor: recallCursor(note.name),
       spellcheck: this.spellcheck,
+      autoAlign: this.autoAlign,
       onChange: this.handleChange,
     });
     this.view.focus();

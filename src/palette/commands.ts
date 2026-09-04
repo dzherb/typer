@@ -86,7 +86,13 @@ function commands(session: Session, palette: Palette): PaletteItem[] {
     { id: "new", label: t.newNote, run: () => session.createNote() },
     { id: "rename", label: t.renameNote, run: () => renameCurrent(session, palette) },
     { id: "delete", label: t.deleteNote, run: () => confirmDelete(session) },
+    { id: "align", label: t.alignTables, run: () => session.alignTables() },
     { id: "count", label: t.countWords, run: () => countWords(session) },
+    {
+      id: "auto-align",
+      label: session.autoAlignEnabled() ? t.autoAlignOff : t.autoAlignOn,
+      run: () => session.setAutoAlignEnabled(!session.autoAlignEnabled()),
+    },
     {
       id: "spellcheck",
       label: session.spellcheckEnabled() ? t.spellcheckOff : t.spellcheckOn,

@@ -7,6 +7,7 @@ import { markdownLanguage } from "@codemirror/lang-markdown";
 import { hangingIndent } from "./hanging-indent.ts";
 import { markdownHighlight } from "./highlight.ts";
 import { markdownKeymap } from "./markdown-keys.ts";
+import { autoAlign, tables } from "./tables.ts";
 import { editorTheme } from "./theme.ts";
 import { scrollToAnchor, typewriter } from "./typewriter.ts";
 
@@ -15,11 +16,14 @@ export interface EditorConfig {
   /** Offset to put the caret at; clamped, so a stale one is harmless. */
   cursor?: number;
   spellcheck: boolean;
+  /** Whether a table lines its own pipes up as the caret leaves it. */
+  autoAlign: boolean;
   onChange?: (doc: string) => void;
 }
 
-/* Kept in a compartment so it can be switched without rebuilding the state. */
+/* Kept in compartments so they can be switched without rebuilding the state. */
 const spellcheckSlot = new Compartment();
+const autoAlignSlot = new Compartment();
 
 /*
  * CodeMirror sets spellcheck="false" on its content element, so this has to be
@@ -31,7 +35,7 @@ function spellcheckAttribute(enabled: boolean): Extension {
   return EditorView.contentAttributes.of({ spellcheck: enabled ? "true" : "false" });
 }
 
-function baseExtensions({ spellcheck, onChange }: EditorConfig): Extension[] {
+function baseExtensions({ spellcheck, autoAlign: align, onChange }: EditorConfig): Extension[] {
   return [
     history(),
     drawSelection(),
@@ -40,8 +44,10 @@ function baseExtensions({ spellcheck, onChange }: EditorConfig): Extension[] {
     syntaxHighlighting(markdownHighlight),
     editorTheme,
     hangingIndent(),
+    tables(),
     typewriter(),
     spellcheckSlot.of(spellcheckAttribute(spellcheck)),
+    autoAlignSlot.of(align ? autoAlign : []),
     // Ours first: Enter and Tab must beat the defaults.
     keymap.of([...markdownKeymap, ...defaultKeymap, ...historyKeymap]),
     EditorView.updateListener.of((update) => {
@@ -81,6 +87,10 @@ export function loadDocument(view: EditorView, config: EditorConfig): void {
 
 export function setSpellcheck(view: EditorView, enabled: boolean): void {
   view.dispatch({ effects: spellcheckSlot.reconfigure(spellcheckAttribute(enabled)) });
+}
+
+export function setAutoAlign(view: EditorView, enabled: boolean): void {
+  view.dispatch({ effects: autoAlignSlot.reconfigure(enabled ? autoAlign : []) });
 }
 
 /**
