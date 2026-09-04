@@ -73,29 +73,39 @@ bun run dev
 
 ## Deployment
 
+Where a copy of typer goes is a property of the copy, not of the project, so
+`deploy.sh` reads it from `deploy.env` — a file git ignores:
+
+```bash
+TYPER_HOST=my-server                 # ssh alias, or user@host
+TYPER_ROOT=/var/www/typer            # optional, and this is the default
+TYPER_URL=https://typer.example.com  # optional, printed when the deploy lands
+```
+
+After that, every time:
+
 ```bash
 ./deploy.sh
 ```
 
-Builds and rsyncs `dist/` to `dzherb:/var/www/typer`. Host and path are
-overridden with `TYPER_HOST` and `TYPER_ROOT`.
+It builds and rsyncs `dist/` there. The same three names read from the
+environment too, which is what a one-off deploy from somewhere else wants.
 
-Once, on the server:
-
-The certificate comes first: the config refers to it, and `nginx -t` will not
-pass on a config it cannot verify.
+Once, on the server. The certificate comes first: the config refers to it, and
+`nginx -t` will not pass on a config it cannot verify.
 
 ```bash
-sudo certbot certonly --nginx -d typer.dzherb.ru
+sudo certbot certonly --nginx -d typer.example.com
 sudo mkdir -p /var/www/typer && sudo chown "$USER" /var/www/typer
-sudo cp deploy/typer.dzherb.ru.conf /etc/nginx/sites-available/typer.dzherb.ru
-sudo ln -s /etc/nginx/sites-available/typer.dzherb.ru /etc/nginx/sites-enabled/
+sed 's/typer\.example\.com/YOUR-DOMAIN/g' deploy/nginx.conf |
+  sudo tee /etc/nginx/sites-available/typer > /dev/null
+sudo ln -s /etc/nginx/sites-available/typer /etc/nginx/sites-enabled/
 sudo nginx -t && sudo systemctl reload nginx
 ```
 
-Then open `https://typer.dzherb.ru`, pick a folder and install it as an app —
-in its own window, without browser chrome, the folder permission sticks far
-more reliably.
+Then open the site, pick a folder and install it as an app — in its own
+window, without browser chrome, the folder permission sticks far more
+reliably.
 
 ## Version
 
