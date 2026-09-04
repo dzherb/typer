@@ -8,6 +8,7 @@ import {
   renameCursor,
 } from "./cursors.ts";
 import { createEditor, loadDocument, recheckSpelling, setSpellcheck } from "./editor/editor.ts";
+import { keepCaret } from "./editor/focus.ts";
 import { t } from "./i18n.ts";
 import { readSettings, updateSettings } from "./settings.ts";
 import { titleOf } from "./storage/naming.ts";
@@ -45,6 +46,7 @@ export class Session {
       spellcheck: this.spellcheck,
       onChange: this.handleChange,
     });
+    keepCaret(this.view);
   }
 
   static async start(vault: Vault, parent: HTMLElement, lastNote?: string): Promise<Session> {
