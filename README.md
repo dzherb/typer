@@ -3,6 +3,9 @@
 A minimal markdown editor for daily notes. No server: the notes are ordinary
 `.md` files in a folder on disk, and the whole app runs in the browser.
 
+Running at <https://typer.dzherb.ru>. Chromium only, for the reason under
+*Browsers* below.
+
 ## How it works
 
 - **Editor** — CodeMirror 6. The markdown source stays visible at all times,
@@ -128,3 +131,9 @@ in someone's diary is not the same thing as underlining them.
 
 iA Writer Quattro S, [SIL OFL 1.1](public/fonts/LICENSE.md), © Information
 Architects. Full Cyrillic coverage — the face is built on IBM Plex.
+
+## License
+
+[MIT](LICENSE) — the code. The font is not covered by it: iA Writer Quattro S
+stays under the [SIL OFL 1.1](public/fonts/LICENSE.md) it ships with, and that
+license has to travel with the files wherever they are copied.

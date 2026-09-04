@@ -2,6 +2,13 @@
   "name": "typer",
   "private": true,
   "version": "0.1.0",
+  "description": "A minimal markdown editor for daily notes, kept as .md files in a folder on disk.",
+  "license": "MIT",
+  "homepage": "https://typer.dzherb.ru",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dzherb/typer.git"
+  },
   "type": "module",
   "scripts": {
     "dev": "vite",
