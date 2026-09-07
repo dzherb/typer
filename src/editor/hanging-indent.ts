@@ -1,8 +1,8 @@
-import { RangeSetBuilder } from "@codemirror/state";
+import { type Extension, RangeSetBuilder } from "@codemirror/state";
 import {
   Decoration,
   type DecorationSet,
-  EditorView,
+  type EditorView,
   ViewPlugin,
   type ViewUpdate,
 } from "@codemirror/view";
@@ -45,7 +45,7 @@ class HangingIndent {
 
     // The web font arrives after the first paint, and every width measured
     // against the fallback has to be thrown away when it does.
-    document.fonts?.ready.then(() => {
+    void document.fonts.ready.then(() => {
       if (this.destroyed) return;
       this.widths.clear();
       this.stale = true;
@@ -103,7 +103,7 @@ class HangingIndent {
   }
 }
 
-export function hangingIndent() {
+export function hangingIndent(): Extension {
   return ViewPlugin.fromClass(HangingIndent, {
     decorations: (plugin) => plugin.decorations,
   });

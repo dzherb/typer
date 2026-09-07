@@ -1,10 +1,4 @@
-import {
-  dateStamp,
-  isProvisionalName,
-  isTitleComplete,
-  slugify,
-  titleOf,
-} from "./naming.ts";
+import { dateStamp, isProvisionalName, isTitleComplete, slugify, titleOf } from "./naming.ts";
 
 export interface Note {
   /** File name including the .md extension; unique within the folder. */
@@ -139,8 +133,8 @@ export class Vault {
     const slug = slugify(titleOf(text, ""));
     if (!slug) return name;
 
-    // Keep the date the note was created under, not today's.
-    const date = /^\d{4}-\d{2}-\d{2}/.exec(name)![0];
-    return this.rename(name, `${date}-${slug}${EXT}`);
+    // Keep the date the note was created under, not today's. The name is
+    // provisional, so its first ten characters are that date.
+    return this.rename(name, `${name.slice(0, 10)}-${slug}${EXT}`);
   }
 }

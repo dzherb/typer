@@ -19,8 +19,7 @@ import { alignTables } from "./editor/tables.ts";
 import { t } from "./i18n.ts";
 import { readSettings, updateSettings } from "./settings.ts";
 import { titleOf } from "./storage/naming.ts";
-import type { Note } from "./storage/vault.ts";
-import { Vault } from "./storage/vault.ts";
+import type { Note, Vault } from "./storage/vault.ts";
 import { notice } from "./ui/notice.ts";
 
 /** Quiet time before a write. Short enough to forget it exists. */
@@ -65,8 +64,7 @@ export class Session {
     await session.reindex();
 
     const opening =
-      (lastNote && session.notes.has(lastNote) ? lastNote : undefined) ??
-      session.list()[0]?.name;
+      (lastNote && session.notes.has(lastNote) ? lastNote : undefined) ?? session.list()[0]?.name;
 
     if (opening) await session.open(opening);
     else await session.createNote();
@@ -260,7 +258,15 @@ export class Session {
     const modified = await this.vault.modifiedAt(name);
     if (modified === null) {
       notice(t.fileVanished(name), {
-        actions: [{ label: t.saveAgain, run: () => { this.dirty = true; void this.flush(); } }],
+        actions: [
+          {
+            label: t.saveAgain,
+            run: () => {
+              this.dirty = true;
+              void this.flush();
+            },
+          },
+        ],
       });
       return;
     }

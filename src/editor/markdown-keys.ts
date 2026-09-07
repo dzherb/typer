@@ -1,10 +1,16 @@
-import { EditorSelection, type ChangeSpec, type EditorState, type Line } from "@codemirror/state";
-import type { Command, KeyBinding } from "@codemirror/view";
 import { indentLess, indentMore } from "@codemirror/commands";
 import {
   deleteMarkupBackward,
   insertNewlineContinueMarkupCommand,
 } from "@codemirror/lang-markdown";
+import {
+  type ChangeSpec,
+  EditorSelection,
+  type EditorState,
+  type Line,
+  type SelectionRange,
+} from "@codemirror/state";
+import type { Command, KeyBinding } from "@codemirror/view";
 
 /**
  * Wrap each selection in `mark`, or unwrap it if it is already wrapped.
@@ -14,7 +20,7 @@ function toggleWrap(mark: string): Command {
   return (view) => {
     const { state } = view;
     const changes: ChangeSpec[] = [];
-    const ranges = [];
+    const ranges: SelectionRange[] = [];
 
     for (const range of state.selection.ranges) {
       const { from, to } = range;
@@ -62,7 +68,10 @@ interface ListLine {
 
 function listLine(text: string): ListLine | null {
   const match = LIST_ITEM.exec(text);
-  return match ? { indent: match[1].length, content: match[0].length } : null;
+  if (!match) return null;
+
+  const [prefix, indent = ""] = match;
+  return { indent: indent.length, content: prefix.length };
 }
 
 /** Every line the selection touches, in document order. */
@@ -124,10 +133,13 @@ function shiftListItem(outwards: boolean): Command {
   return (view) => {
     const { state } = view;
     const lines = selectedLines(state);
-    const first = listLine(lines[0].text);
+    const head = lines[0];
+    if (!head) return false;
+
+    const first = listLine(head.text);
     if (!first) return false;
 
-    const column = outwards ? unnestColumn(state, lines[0]) : nestColumn(state, lines[0]);
+    const column = outwards ? unnestColumn(state, head) : nestColumn(state, head);
     if (column === null) return false;
 
     const shift = column - first.indent;

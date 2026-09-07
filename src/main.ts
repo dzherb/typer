@@ -30,7 +30,8 @@ if (import.meta.env.PROD && "serviceWorker" in navigator) {
  */
 document.documentElement.dataset.version = versionLine;
 
-const app = document.querySelector<HTMLDivElement>("#app")!;
+const app = document.querySelector<HTMLDivElement>("#app");
+if (!app) throw new Error("#app is missing from index.html");
 
 applyTheme(readSettings().theme);
 // Before the gate: it is the first thing anyone reads, and on a first visit it

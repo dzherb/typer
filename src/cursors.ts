@@ -53,9 +53,10 @@ export function forgetCursor(name: string): void {
 /** Carry a note's caret across a rename, so the file keeps its place. */
 export function renameCursor(from: string, to: string): void {
   const cursors = read();
-  if (!(from in cursors) || from === to) return;
+  const at = cursors[from];
+  if (at === undefined || from === to) return;
 
-  cursors[to] = cursors[from]!;
+  cursors[to] = at;
   delete cursors[from];
   write(cursors);
 }

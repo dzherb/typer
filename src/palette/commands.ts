@@ -1,6 +1,6 @@
-import { applyLang, t, type Lang } from "../i18n.ts";
-import { applyTheme, updateSettings, type Theme } from "../settings.ts";
+import { applyLang, type Lang, t } from "../i18n.ts";
 import type { Session } from "../session.ts";
+import { applyTheme, type Theme, updateSettings } from "../settings.ts";
 import { forgetVault } from "../storage/handle.ts";
 import { notice } from "../ui/notice.ts";
 import { versionLine } from "../version.ts";
@@ -79,6 +79,8 @@ function matches(chord: Chord, event: KeyboardEvent): boolean {
 function countWords(session: Session): void {
   const text = session.text();
   const words = text.match(WORD)?.length ?? 0;
+  // Characters are counted as code points, not as UTF-16 halves.
+  // eslint-disable-next-line @typescript-eslint/no-misused-spread
   const chars = [...text].length;
   notice(t.wordCount(words, chars), { timeout: 5000 });
 }
@@ -184,7 +186,7 @@ function commands(session: Session, palette: Palette): PaletteItem[] {
   return definitions(session, palette).map(({ chord, ...command }) => ({
     ...command,
     kind: "command" as const,
-    chord: chord && chordName(chord),
+    ...(chord && { chord: chordName(chord) }),
   }));
 }
 
@@ -218,7 +220,7 @@ function commandList(session: Session, palette: Palette, query: string): Palette
   const all = commands(session, palette).filter((command) => command.id !== LIST_ID);
   if (!query) return all;
 
-  const ranked: Array<{ item: PaletteItem; rank: number }> = [];
+  const ranked: { item: PaletteItem; rank: number }[] = [];
 
   for (const command of all) {
     const rank = score(command.label, query);
@@ -241,19 +243,17 @@ export function createPaletteSource(session: Session, palette: Palette): Palette
     const open = session.currentName();
 
     if (!query) {
-      const newNote = commands(session, palette)[0]!;
-      return [
-        newNote,
-        ...notes.map((note) => ({
-          id: note.name,
-          label: note.title,
-          hint: note.name === open ? t.noteOpenHint : note.name,
-          run: () => session.open(note.name),
-        })),
-      ];
+      const [newNote] = commands(session, palette);
+      const rows = notes.map((note) => ({
+        id: note.name,
+        label: note.title,
+        hint: note.name === open ? t.noteOpenHint : note.name,
+        run: () => session.open(note.name),
+      }));
+      return newNote ? [newNote, ...rows] : rows;
     }
 
-    const ranked: Array<{ item: PaletteItem; rank: number }> = [];
+    const ranked: { item: PaletteItem; rank: number }[] = [];
 
     for (const command of commands(session, palette)) {
       const rank = score(command.label, query);

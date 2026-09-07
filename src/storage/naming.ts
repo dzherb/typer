@@ -2,6 +2,7 @@
  * Notes are real files someone will look at in Finder, so names are
  * transliterated to Latin: portable across tools, git and URLs.
  */
+// biome-ignore format: a table of letters reads as a table
 const CYRILLIC: Record<string, string> = {
   а: "a", б: "b", в: "v", г: "g", д: "d", е: "e", ё: "e", ж: "zh",
   з: "z", и: "i", й: "i", к: "k", л: "l", м: "m", н: "n", о: "o",
@@ -13,9 +14,9 @@ const CYRILLIC: Record<string, string> = {
 const MAX_SLUG = 48;
 
 export function slugify(title: string): string {
-  const latin = [...title.toLowerCase()]
-    .map((ch) => CYRILLIC[ch] ?? ch)
-    .join("");
+  // The map is keyed by code point, which is what a Cyrillic letter is.
+  // eslint-disable-next-line @typescript-eslint/no-misused-spread
+  const latin = [...title.toLowerCase()].map((ch) => CYRILLIC[ch] ?? ch).join("");
 
   return latin
     .normalize("NFKD")
@@ -66,8 +67,7 @@ export function titleOf(text: string, fallback: string): string {
     // An empty heading is the marker a note starts under, not a title yet.
     if (!line || /^#{1,6}$/.test(line)) continue;
 
-    const heading = HEADING.exec(line);
-    const title = heading ? heading[1] : line;
+    const title = HEADING.exec(line)?.[1] ?? line;
     return title.slice(0, MAX_TITLE);
   }
   return fallback.replace(/\.md$/, "");

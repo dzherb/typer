@@ -1,3 +1,4 @@
+import { t } from "./i18n.ts";
 import {
   forgetVault,
   hasAccess,
@@ -6,7 +7,6 @@ import {
   rememberVault,
   supportsFileSystemAccess,
 } from "./storage/handle.ts";
-import { t } from "./i18n.ts";
 import { Vault } from "./storage/vault.ts";
 
 interface Choice {
@@ -136,7 +136,7 @@ export function requestVault(parent: HTMLElement): Promise<Vault> {
       }
 
       screen(t.openFolderIn(remembered.name), [
-        { label: t.openFolder, run: async () => remembered },
+        { label: t.openFolder, run: () => Promise.resolve(remembered) },
         { label: t.pickAnotherFolder, run: pickVault },
       ]);
     })();

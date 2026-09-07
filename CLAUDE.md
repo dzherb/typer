@@ -11,12 +11,30 @@ Read `README.md` first — it describes the behaviour this code has to keep.
 ```bash
 bun install
 bun run dev      # vite on 5173
-bun run build    # tsc && vite build — tsc is the gate and must pass
+bun run check    # tsc, both linters, the tests — this is the gate
+bun run format   # biome, writing what it can fix on its own
+bun run test     # bun test
+bun run build    # tsc && vite build
 ./deploy.sh      # builds, rsyncs dist/ to the server
 ```
 
-There are no tests, no linter and no formatter. `bun run build` is the whole
-check: it type-checks under `strict` and fails on unused locals and parameters.
+`bun run check` is what has to pass, and it is four things that deliberately
+do not overlap:
+
+- **tsc** under `strict`, plus `noUncheckedIndexedAccess`,
+  `exactOptionalPropertyTypes` and the unused-code flags. One project covers
+  the app, the tests and `vite.config.ts`; three tsconfigs would keep their
+  globals apart and are more ceremony than a folder this size earns.
+- **Biome** (`biome.json`) formats everything — TypeScript, CSS, JSON — and
+  lints a file at a time, fast enough to run on save.
+- **ESLint** (`eslint.config.mjs`) is the type-aware half: a promise nobody
+  awaited, a condition that was never in doubt, a rejection that is not an
+  `Error`.
+- **bun test** over `tests/`.
+
+A rule is off only where it and this codebase disagree about style rather than
+about correctness, and the config says which — see `no-dynamic-delete`. The
+first move on a new complaint is to fix the code, not to widen the config.
 
 English for code, comments, commit messages and README — the sources are going
 public. Russian only inside the `ru` catalogue.
@@ -31,6 +49,20 @@ runtime there is CodeMirror and nothing else.
 **No permanent chrome.** The app has exactly two surfaces: the palette
 (`Cmd+K`) and the notices at the foot of the page. Anything new arrives
 through one of them; nothing new sits on screen while someone is writing.
+
+## Tests
+
+In `tests/`, one file per module, run by `bun test`. There is no DOM out
+there, so what is tested is what can be reached without one: names and slugs,
+the palette's ranking, table alignment, the storage modules against a folder
+and a localStorage that live in memory (`tests/fake-folder.ts`,
+`tests/support.ts`), and the markdown keymap against a view that is nothing
+but a document and a dispatch.
+
+Anything needing a real editor — measurement, scrolling, decorations — is not
+tested, and should not grow a headless browser in order to be. A test says
+what the behaviour is in the words the README uses for it, so a failing one
+names the promise that broke.
 
 ## Strings
 

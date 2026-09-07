@@ -1,9 +1,9 @@
 import { ensureSyntaxTree, syntaxTree } from "@codemirror/language";
 import {
-  RangeSetBuilder,
   type ChangeSpec,
   type EditorState,
   type Extension,
+  RangeSetBuilder,
 } from "@codemirror/state";
 import {
   Decoration,
@@ -163,7 +163,7 @@ export const autoAlign: Extension = EditorView.updateListener.of((update) => {
 
   const from = update.changes.mapPos(left.from, 1);
   const entered = tableAt(update.state, update.state.selection.main.head);
-  if (entered && entered.from === from) return;
+  if (entered?.from === from) return;
 
   // Not from inside the update that noticed it: dispatching there is not
   // allowed, and a microtask still runs before anything is painted.

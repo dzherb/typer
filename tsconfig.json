@@ -3,7 +3,13 @@
     "target": "es2023",
     "module": "esnext",
     "lib": ["ES2023", "DOM"],
-    "types": ["vite/client", "wicg-file-system-access"],
+    /*
+     * One project for the app, its tests and the build script. They want
+     * different globals — a browser, bun, node — and keeping that honest
+     * would take three tsconfigs, which is more ceremony than a folder this
+     * size earns. The app code is the only code with a browser to run in.
+     */
+    "types": ["vite/client", "wicg-file-system-access", "bun"],
     "allowArbitraryExtensions": true,
     "skipLibCheck": true,
     "strict": true,
@@ -13,13 +19,21 @@
     "allowImportingTsExtensions": true,
     "verbatimModuleSyntax": true,
     "moduleDetection": "force",
+    "isolatedModules": true,
     "noEmit": true,
 
     /* Linting */
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "erasableSyntaxOnly": true,
-    "noFallthroughCasesInSwitch": true
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitReturns": true,
+    "noImplicitOverride": true,
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
+    "noUncheckedSideEffectImports": true,
+    "allowUnreachableCode": false,
+    "allowUnusedLabels": false
   },
-  "include": ["src"]
+  "include": ["src", "tests", "vite.config.ts"]
 }

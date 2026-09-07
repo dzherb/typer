@@ -21,7 +21,7 @@ function openDatabase(): Promise<IDBDatabase> {
       }
     };
     request.onsuccess = () => resolve(request.result);
-    request.onerror = () => reject(request.error);
+    request.onerror = () => reject(request.error ?? new Error("IndexedDB open failed"));
   });
 }
 
@@ -29,13 +29,12 @@ function transact<T>(
   mode: IDBTransactionMode,
   run: (store: IDBObjectStore) => IDBRequest<T>,
 ): Promise<T> {
-  return openDatabase().then(
-    (db) =>
-      new Promise<T>((resolve, reject) => {
-        const request = run(db.transaction(STORE, mode).objectStore(STORE));
-        request.onsuccess = () => resolve(request.result);
-        request.onerror = () => reject(request.error);
-      }).finally(() => db.close()),
+  return openDatabase().then((db) =>
+    new Promise<T>((resolve, reject) => {
+      const request = run(db.transaction(STORE, mode).objectStore(STORE));
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error ?? new Error("IndexedDB request failed"));
+    }).finally(() => db.close()),
   );
 }
 

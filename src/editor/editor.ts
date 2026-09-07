@@ -1,8 +1,8 @@
-import { Compartment, EditorSelection, EditorState, type Extension } from "@codemirror/state";
-import { EditorView, drawSelection, keymap } from "@codemirror/view";
 import { defaultKeymap, history, historyKeymap } from "@codemirror/commands";
-import { LanguageSupport, syntaxHighlighting } from "@codemirror/language";
 import { markdownLanguage } from "@codemirror/lang-markdown";
+import { LanguageSupport, syntaxHighlighting } from "@codemirror/language";
+import { Compartment, EditorSelection, EditorState, type Extension } from "@codemirror/state";
+import { drawSelection, EditorView, keymap } from "@codemirror/view";
 
 import { hangingIndent } from "./hanging-indent.ts";
 import { markdownHighlight } from "./highlight.ts";

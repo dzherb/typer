@@ -99,8 +99,7 @@ const en: typeof ru = {
   folderUnreadable: (name: string) =>
     `The folder "${name}" could not be read. It may have been moved or deleted.`,
   folderOpenFailed: "Could not open the folder.",
-  folderMoved: (name: string) =>
-    `The folder "${name}" is no longer where it was. Pick it again.`,
+  folderMoved: (name: string) => `The folder "${name}" is no longer where it was. Pick it again.`,
   openFolderIn: (name: string) => `Open the notes in "${name}"?`,
   pickFolder: "Pick a folder",
   openFolder: "Open",

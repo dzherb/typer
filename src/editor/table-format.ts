@@ -55,7 +55,7 @@ function splitRow(line: Line): Row | null {
   }
   if (pipes.length === 0) return null;
 
-  const bounds: Array<[number, number]> = [];
+  const bounds: [number, number][] = [];
   let start = prefix.length;
   for (const pipe of pipes) {
     bounds.push([start, pipe]);
@@ -66,8 +66,10 @@ function splitRow(line: Line): Row | null {
   // An outer pipe leaves an empty stretch beyond it; the outer pipes GFM lets
   // a row leave off do not, and what stands there is the first or last cell.
   const blank = ([from, to]: [number, number]) => !line.text.slice(from, to).trim();
-  if (blank(bounds[0])) bounds.shift();
-  if (bounds.length > 0 && blank(bounds[bounds.length - 1])) bounds.pop();
+  const first = bounds[0];
+  if (first && blank(first)) bounds.shift();
+  const last = bounds.at(-1);
+  if (last && blank(last)) bounds.pop();
 
   const cells = bounds.map(([from, to]) => {
     const text = line.text.slice(from, to);
@@ -100,7 +102,7 @@ function alignments(row: Row): Align[] | null {
 /** Trailing empty cells are typing, not columns: a stray "|" adds nothing. */
 function cellCount(row: Row): number {
   let count = row.cells.length;
-  while (count > 0 && !row.cells[count - 1].text) count--;
+  while (count > 0 && !row.cells[count - 1]?.text) count--;
   return count;
 }
 
@@ -144,12 +146,14 @@ function rowChanges(
   };
 
   for (let column = 0; column < widths.length; column++) {
+    const size = widths[column] ?? MIN_WIDTH;
+    const how = align[column] ?? "none";
     const cell = anchored ? row.cells.at(column) : undefined;
-    const text = anchored ? (cell?.text ?? "") : delimiterCell(widths[column], align[column]);
-    const [left, right] = anchored ? padding(text, widths[column], align[column]) : ["", ""];
+    const text = anchored ? (cell?.text ?? "") : delimiterCell(size, how);
+    const [left, right] = anchored ? padding(text, size, how) : ["", ""];
 
     pending += ` ${left}`;
-    if (cell && cell.text) {
+    if (cell?.text) {
       write(cell.from, pending);
       at = cell.to;
       pending = "";
@@ -177,10 +181,11 @@ export function tableChanges(state: EditorState, from: number, to: number): Chan
     const row = splitRow(state.doc.line(n));
     if (row) rows.push(row);
   }
-  if (rows.length < 2) return [];
 
   // The second row states the alignments; without one this is not a table.
   const delimiter = rows[1];
+  if (!delimiter) return [];
+
   const align = alignments(delimiter);
   if (!align) return [];
 
@@ -191,7 +196,8 @@ export function tableChanges(state: EditorState, from: number, to: number): Chan
   for (const row of rows) {
     if (row === delimiter) continue;
     row.cells.forEach((cell, column) => {
-      if (column < columns) widths[column] = Math.max(widths[column], width(cell.text));
+      if (column < columns)
+        widths[column] = Math.max(widths[column] ?? MIN_WIDTH, width(cell.text));
     });
   }
 

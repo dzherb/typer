@@ -1,3 +1,4 @@
+import type { Extension } from "@codemirror/state";
 import { EditorView, type ViewUpdate } from "@codemirror/view";
 
 /**
@@ -48,7 +49,7 @@ export function scrollToAnchor(view: EditorView, pos: number): void {
   });
 }
 
-export function typewriter() {
+export function typewriter(): Extension {
   return EditorView.updateListener.of((update) => {
     if (shouldReanchor(update)) {
       // After the DOM has settled, so measurement reflects the new layout.

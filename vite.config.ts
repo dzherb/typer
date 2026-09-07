@@ -1,7 +1,7 @@
 import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { readdirSync, readFileSync } from "node:fs";
-import { join } from "node:path";
+import { join, sep } from "node:path";
 import { defineConfig, type Plugin } from "vite";
 
 const PUBLIC_DIR = "public";
@@ -10,7 +10,8 @@ function filesUnder(dir: string, base = dir): string[] {
   return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
     const full = join(dir, entry.name);
     if (entry.isDirectory()) return filesUnder(full, base);
-    return [`/${full.slice(base.length + 1).split(/[\\/]/).join("/")}`];
+    // Posix separators: this list is URLs, whatever the build ran on.
+    return [`/${full.slice(base.length + 1).replaceAll(sep, "/")}`];
   });
 }
 
@@ -90,7 +91,10 @@ self.addEventListener("fetch", (event) => {
 }
 
 function git(...args: string[]): string {
-  return execFileSync("git", args, { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] }).trim();
+  return execFileSync("git", args, {
+    encoding: "utf8",
+    stdio: ["ignore", "pipe", "ignore"],
+  }).trim();
 }
 
 /**

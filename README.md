@@ -98,6 +98,15 @@ bun install
 bun run dev
 ```
 
+Before a commit:
+
+```bash
+bun run check
+```
+
+TypeScript, Biome, ESLint and the tests in `tests/`, in that order.
+`bun run format` rewrites what Biome can fix by itself.
+
 ## Deployment
 
 Where a copy of typer goes is a property of the copy, not of the project, so
