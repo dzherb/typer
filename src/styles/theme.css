@@ -24,7 +24,7 @@
    * measure of a paragraph wraps it into rubble. Past the wider one it wraps
    * like anything else — about eighty monospaced columns fit before that.
    */
-  --measure: 31rem;
+  --measure: 36rem;
   --measure-table: 49rem;
   --text-size: 1.125rem;
   --line-height: 1.7;
