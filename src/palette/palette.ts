@@ -1,6 +1,16 @@
 import { t } from "../i18n.ts";
 import type { Excerpt } from "./match.ts";
 
+/**
+ * A keystroke, written twice: `label` is what the row shows, `spoken` the same
+ * chord in words. Screen readers make what they like of ⌘ and ⇧, so the
+ * accessible name gets the words instead.
+ */
+export interface ChordName {
+  label: string;
+  spoken: string;
+}
+
 export interface PaletteItem {
   id: string;
   label: string;
@@ -8,6 +18,8 @@ export interface PaletteItem {
   kind?: "command";
   /** Shown dimmed at the right — a file name, or what kind of thing this is. */
   hint?: string;
+  /** The keystroke that runs this without the palette, for the few that have one. */
+  chord?: ChordName;
   /** A second line: the line of prose a full-text hit was found in. */
   excerpt?: Excerpt;
   run: () => unknown;
@@ -78,6 +90,14 @@ export class Palette {
 
   get isOpen(): boolean {
     return this.dialog.open;
+  }
+
+  /**
+   * Whether the input is standing in for a value rather than a query. The key
+   * handler reads this to leave a half-typed name alone.
+   */
+  get isAsking(): boolean {
+    return this.asking !== null;
   }
 
   open(query = ""): void {
@@ -153,7 +173,8 @@ export class Palette {
            * adding to it, hence the label is repeated here — dropping it would
            * leave a row announced as just "command".
            */
-          row.setAttribute("aria-label", `${item.label}, ${t.commandHint}`);
+          const chord = item.chord ? `, ${item.chord.spoken}` : "";
+          row.setAttribute("aria-label", `${item.label}, ${t.commandHint}${chord}`);
         }
         row.setAttribute("role", "option");
         row.setAttribute("aria-selected", String(index === this.active));
@@ -168,6 +189,15 @@ export class Palette {
           hint.className = "palette__meta";
           hint.textContent = item.hint;
           row.append(hint);
+        }
+
+        // The same dim column the file names sit in: a command has no name to
+        // put there, and nothing else competes for the space.
+        if (item.chord) {
+          const chord = document.createElement("span");
+          chord.className = "palette__meta";
+          chord.textContent = item.chord.label;
+          row.append(chord);
         }
 
         if (item.excerpt) row.append(renderExcerpt(item.excerpt));

@@ -17,7 +17,8 @@ Running at <https://typer.dzherb.ru>. Chromium only, for the reason under
   renaming, deleting, aligning tables, word count, theme, language. Nothing
   else is on screen. A `Commands` command lists the rest of them, with the
   notes out of the way; typing then narrows that list, and Escape leaves it.
-  `About` is where the version lives.
+  `About` is where the version lives. The three commands that come up daily
+  have a chord of their own as well, printed beside them in the palette.
 - **Offline** — a service worker precaches the entire app.
 - **Spelling** — the browser's own checker, on by default. A palette command
   turns it off, and the choice is remembered.
@@ -27,9 +28,16 @@ Running at <https://typer.dzherb.ru>. Chromium only, for the reason under
 | | |
 |---|---|
 | `Cmd+K` | palette: notes, search, commands |
+| `Cmd+Enter` | new note |
+| `Cmd+Shift+P` | the command list |
+| `Cmd+Shift+F` | align every table in the note |
 | `Enter` | continues a list or a quote; on an empty item it leaves the list |
 | `Tab` / `Shift+Tab` | indent level of the item |
 | `Cmd+B` / `Cmd+I` | bold / italic |
+
+`Cmd` is `Ctrl` off a Mac, and the palette writes whichever one this keyboard
+has. The chords are read from the physical key, so a Cyrillic layout keeps
+them.
 
 ## Tables
 
@@ -39,8 +47,8 @@ cells is given them. This happens when the caret leaves the table, never while
 you are typing inside one — re-padding on every keystroke would slide the
 columns out from under the word being written.
 
-`Cmd+K` → `Align tables` does the whole note at once, which is what a table
-pasted in from somewhere else needs. The automatic half can be turned off —
+`Cmd+Shift+F`, or `Cmd+K` → `Align tables`, does the whole note at once, which
+is what a table pasted in from somewhere else needs. The automatic half can be turned off —
 `Cmd+K` → `Table auto-align` — and the choice is remembered; what is left then
 is that command, so a table is aligned when you ask and never on its own.
 

@@ -4,7 +4,7 @@ import "./styles/app.css";
 
 import { requestVault } from "./gate.ts";
 import { applyLang, detectLang, t } from "./i18n.ts";
-import { createPaletteSource } from "./palette/commands.ts";
+import { createPaletteSource, runShortcut } from "./palette/commands.ts";
 import { Palette } from "./palette/palette.ts";
 import { Session } from "./session.ts";
 import { applyTheme, readSettings } from "./settings.ts";
@@ -62,13 +62,30 @@ try {
 const palette: Palette = new Palette((query, mode) => source(query, mode));
 const source = createPaletteSource(session, palette);
 
-window.addEventListener("keydown", (event) => {
-  // Matched on the physical key: on a Cyrillic layout this one reports "л",
-  // and matching the character would leave the palette unreachable there.
-  if (event.code !== "KeyK" || !(event.metaKey || event.ctrlKey)) return;
-  if (event.repeat) return;
+/*
+ * Captured rather than left to bubble, because the editor would otherwise get
+ * these first: Cmd+Enter is insertBlankLine in CodeMirror's default keymap,
+ * and a chord that both creates a note and edits the one being left behind is
+ * worse than either. Stopping the event is what takes the key away.
+ */
+window.addEventListener(
+  "keydown",
+  (event) => {
+    if (event.repeat) return;
 
-  event.preventDefault();
-  if (palette.isOpen) palette.close();
-  else palette.open();
-});
+    if (runShortcut(event, session, palette)) {
+      event.preventDefault();
+      event.stopPropagation();
+      return;
+    }
+
+    // Matched on the physical key: on a Cyrillic layout this one reports "л",
+    // and matching the character would leave the palette unreachable there.
+    if (event.code !== "KeyK" || !(event.metaKey || event.ctrlKey)) return;
+
+    event.preventDefault();
+    if (palette.isOpen) palette.close();
+    else palette.open();
+  },
+  { capture: true },
+);

@@ -5,7 +5,7 @@ import { forgetVault } from "../storage/handle.ts";
 import { notice } from "../ui/notice.ts";
 import { versionLine } from "../version.ts";
 import { excerpt, score } from "./match.ts";
-import type { Palette, PaletteItem, PaletteSource } from "./palette.ts";
+import type { ChordName, Palette, PaletteItem, PaletteSource } from "./palette.ts";
 
 /** Full-text hits rank below every title match, whatever their content. */
 const CONTENT_RANK = 5;
@@ -17,6 +17,64 @@ const LIST_ID = "commands";
 const REPO = "https://github.com/dzherb/typer";
 
 const WORD = /[\p{L}\p{N}][\p{L}\p{N}'’‑-]*/gu;
+
+/*
+ * A chord names the physical key, the way Cmd+K does in main.ts: on a Cyrillic
+ * layout this "P" arrives as "з", and matching the character would put the
+ * command out of reach there. Cmd and Ctrl are both accepted everywhere, so a
+ * Mac keyboard on Linux, or the reverse, still works.
+ */
+interface Chord {
+  code: string;
+  shift?: boolean;
+}
+
+interface Command {
+  id: string;
+  label: string;
+  chord?: Chord;
+  run: () => unknown;
+}
+
+/*
+ * navigator.platform is deprecated in favour of userAgentData, which the DOM
+ * library does not describe yet — hence the shape written out here, with the
+ * old name kept as the answer of last resort.
+ */
+const platform =
+  (navigator as Navigator & { userAgentData?: { platform?: string } }).userAgentData?.platform ??
+  navigator.platform;
+
+// Case-insensitively, because the two names disagree: userAgentData says
+// "macOS" where the old navigator.platform says "MacIntel".
+const MAC = /mac/i.test(platform);
+
+function keyName(code: string): string {
+  return code.startsWith("Key") ? code.slice(3) : code;
+}
+
+/**
+ * ⇧⌘P on a Mac — Apple's order, which puts Command last and draws Enter rather
+ * than spelling it — and Ctrl+Shift+P everywhere else.
+ *
+ * The spoken form never uses the glyphs: what a screen reader makes of "⇧⌘P"
+ * is anyone's guess, and the accessible name is the one place it matters.
+ */
+function chordName(chord: Chord): ChordName {
+  const key = keyName(chord.code);
+  const spoken = [MAC ? "Cmd" : "Ctrl", ...(chord.shift ? ["Shift"] : []), key].join("+");
+  const label = MAC ? `${chord.shift ? "⇧" : ""}⌘${key === "Enter" ? "⏎" : key}` : spoken;
+  return { label, spoken };
+}
+
+function matches(chord: Chord, event: KeyboardEvent): boolean {
+  return (
+    event.code === chord.code &&
+    (event.metaKey || event.ctrlKey) &&
+    !event.altKey &&
+    event.shiftKey === (chord.shift ?? false)
+  );
+}
 
 function countWords(session: Session): void {
   const text = session.text();
@@ -81,12 +139,17 @@ async function changeFolder(session: Session): Promise<void> {
   location.reload();
 }
 
-function commands(session: Session, palette: Palette): PaletteItem[] {
+function definitions(session: Session, palette: Palette): Command[] {
   return [
-    { id: "new", label: t.newNote, run: () => session.createNote() },
+    { id: "new", label: t.newNote, chord: { code: "Enter" }, run: () => session.createNote() },
     { id: "rename", label: t.renameNote, run: () => renameCurrent(session, palette) },
     { id: "delete", label: t.deleteNote, run: () => confirmDelete(session) },
-    { id: "align", label: t.alignTables, run: () => session.alignTables() },
+    {
+      id: "align",
+      label: t.alignTables,
+      chord: { code: "KeyF", shift: true },
+      run: () => session.alignTables(),
+    },
     { id: "count", label: t.countWords, run: () => countWords(session) },
     {
       id: "auto-align",
@@ -108,8 +171,42 @@ function commands(session: Session, palette: Palette): PaletteItem[] {
     { id: "lang-en", label: t.langEn, run: () => setLang(session, "en") },
     { id: "folder", label: t.changeFolder, run: () => changeFolder(session) },
     { id: "about", label: t.about, run: () => showAbout() },
-    { id: LIST_ID, label: t.commands, run: () => palette.showCommands() },
-  ].map((command) => ({ ...command, kind: "command" as const }));
+    {
+      id: LIST_ID,
+      label: t.commands,
+      chord: { code: "KeyP", shift: true },
+      run: () => palette.showCommands(),
+    },
+  ];
+}
+
+function commands(session: Session, palette: Palette): PaletteItem[] {
+  return definitions(session, palette).map(({ chord, ...command }) => ({
+    ...command,
+    kind: "command" as const,
+    chord: chord && chordName(chord),
+  }));
+}
+
+/**
+ * Run whatever command the keystroke names, and say whether it found one. The
+ * chord and the row in the palette lead to the same function, so a command
+ * cannot come to mean two things.
+ *
+ * Nothing runs while the palette is asking for a value: Cmd+Enter over a
+ * half-typed file name would throw the name away.
+ */
+export function runShortcut(event: KeyboardEvent, session: Session, palette: Palette): boolean {
+  if (palette.isAsking) return false;
+
+  const command = definitions(session, palette).find(
+    (candidate) => candidate.chord && matches(candidate.chord, event),
+  );
+  if (!command) return false;
+
+  palette.close();
+  void command.run();
+  return true;
 }
 
 /**
