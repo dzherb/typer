@@ -38,6 +38,19 @@ describe("score", () => {
     expect(score("Планёрка", "планерка")).not.toBeNull();
   });
 
+  test("a query typed on the wrong layout finds what the same keys spell on the other", () => {
+    expect(score("привет", "ghbdtn")).toBe(score("привет", "привет"));
+    expect(score("Monday meeting", "ьщтвфн")).toBe(score("Monday meeting", "monday"));
+    expect(score("Любовь", "K.,JDM")).toBe(score("любовь", "любовь"));
+    expect(score("Ёлка", "`kf")).not.toBeNull();
+    expect(score("хлеб", "{kt,")).not.toBeNull();
+  });
+
+  test("the layout a query was typed in counts over the other one", () => {
+    expect(score("cfv", "cfv")).toBe(score("cfv", "сам"));
+    expect(score("monday", "zzz")).toBeNull();
+  });
+
   test("everything matches an empty query, equally", () => {
     expect(score("anything", "")).toBe(0);
     expect(score("", "")).toBe(0);
@@ -74,6 +87,16 @@ describe("excerpt", () => {
     const found = must(excerpt("a note\n\twith   gaps", "with"));
     expect(found.text).toBe("a note with gaps");
     expect(found.text.slice(found.at, found.at + found.length)).toBe("with");
+  });
+
+  test("finds it on the other layout, and marks the words that are there", () => {
+    const found = must(excerpt("пишу про отпуск в августе", "jngecr"));
+    expect(found.text.slice(found.at, found.at + found.length)).toBe("отпуск");
+  });
+
+  test("prefers the query as typed when both layouts are in the note", () => {
+    const found = must(excerpt("сам, and later cfv", "cfv"));
+    expect(found.text.slice(found.at, found.at + found.length)).toBe("cfv");
   });
 
   test("finds it whatever the case, and says where it stands", () => {

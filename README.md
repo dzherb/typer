@@ -19,6 +19,8 @@ Running at <https://typer.dzherb.ru>. Chromium only, for the reason under
   notes out of the way; typing then narrows that list, and Escape leaves it.
   `About` is where the version lives. The three commands that come up daily
   have a chord of their own as well, printed beside them in the palette.
+  The query is read on both layouts, QWERTY and ЙЦУКЕН, so `ghbdtn` finds
+  «привет» and `ьщтвфн` finds `monday`.
 - **Offline** — a service worker precaches the entire app.
 - **Spelling** — the browser's own checker, on by default. A palette command
   turns it off, and the choice is remembered.
