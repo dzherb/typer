@@ -30,7 +30,7 @@ const ru = {
   noFolderAccess: "Без доступа к папке заметки негде хранить.",
   folderUnreadable: (name: string) =>
     `Папку «${name}» не удалось прочитать. Возможно, её переместили или удалили.`,
-  folderOpenFailed: "Не удалось открыть папку.",
+  folderOpenFailed: (reason: string) => `Не удалось открыть папку: ${reason}`,
   folderMoved: (name: string) =>
     `Папки «${name}» больше нет там, где она была. Выберите её заново.`,
   openFolderIn: (name: string) => `Открыть заметки в папке «${name}»?`,
@@ -98,7 +98,7 @@ const en: typeof ru = {
   noFolderAccess: "Without access to the folder there is nowhere to put the notes.",
   folderUnreadable: (name: string) =>
     `The folder "${name}" could not be read. It may have been moved or deleted.`,
-  folderOpenFailed: "Could not open the folder.",
+  folderOpenFailed: (reason: string) => `Could not open the folder: ${reason}`,
   folderMoved: (name: string) => `The folder "${name}" is no longer where it was. Pick it again.`,
   openFolderIn: (name: string) => `Open the notes in "${name}"?`,
   pickFolder: "Pick a folder",

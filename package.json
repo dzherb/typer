@@ -1,7 +1,7 @@
 {
   "name": "typer",
   "private": true,
-  "version": "0.3.1",
+  "version": "0.3.2",
   "description": "A minimal markdown editor for daily notes, kept as .md files in a folder on disk.",
   "license": "MIT",
   "homepage": "https://typer.dzherb.ru",

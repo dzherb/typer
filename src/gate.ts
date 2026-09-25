@@ -44,6 +44,10 @@ function render(parent: HTMLElement, prompt: string, choices: Choice[], error?: 
   return gate;
 }
 
+function reason(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
+}
+
 /**
  * Whether the folder is still where it was. Permission outlives the directory
  * itself: move it, rename it or delete it in Finder and the handle still says
@@ -84,7 +88,10 @@ export function requestVault(parent: HTMLElement): Promise<Vault> {
       if (!(await isReachable(handle))) {
         return t.folderUnreadable(handle.name);
       }
-      await rememberVault(handle);
+      // Remembering is a convenience: an IndexedDB that cannot write — Chromium
+      // does corrupt its backing store now and then — costs one more pick next
+      // time, and must not lock the notes out today.
+      await rememberVault(handle).catch(() => undefined);
       resolve(new Vault(handle));
       return null;
     };
@@ -107,7 +114,7 @@ export function requestVault(parent: HTMLElement): Promise<Vault> {
             if (thrown instanceof DOMException && thrown.name === "AbortError") {
               button.disabled = false;
             } else {
-              screen(prompt, choices, t.folderOpenFailed);
+              screen(prompt, choices, t.folderOpenFailed(reason(thrown)));
             }
           }
         })();
