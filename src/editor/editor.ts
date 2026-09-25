@@ -1,11 +1,11 @@
 import { defaultKeymap, history, historyKeymap } from "@codemirror/commands";
-import { markdownLanguage } from "@codemirror/lang-markdown";
 import { LanguageSupport, syntaxHighlighting } from "@codemirror/language";
 import { Compartment, EditorSelection, EditorState, type Extension } from "@codemirror/state";
 import { drawSelection, EditorView, keymap } from "@codemirror/view";
 
 import { hangingIndent } from "./hanging-indent.ts";
 import { markdownHighlight } from "./highlight.ts";
+import { notesMarkdown } from "./language.ts";
 import { markdownKeymap } from "./markdown-keys.ts";
 import { autoAlign, tables } from "./tables.ts";
 import { editorTheme } from "./theme.ts";
@@ -40,7 +40,7 @@ function baseExtensions({ spellcheck, autoAlign: align, onChange }: EditorConfig
     history(),
     drawSelection(),
     EditorView.lineWrapping,
-    new LanguageSupport(markdownLanguage),
+    new LanguageSupport(notesMarkdown),
     syntaxHighlighting(markdownHighlight),
     editorTheme,
     hangingIndent(),
